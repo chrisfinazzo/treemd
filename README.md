@@ -13,7 +13,7 @@ A markdown navigator with tree-based structural navigation. Like `tree`, but int
 
 ## Features
 
-### 🎨 Interactive TUI
+### Interactive TUI
 
 - **Dual-pane interface** - Navigate outline while viewing content
 - **Syntax highlighting** - 50+ languages with full syntect integration
@@ -24,7 +24,7 @@ A markdown navigator with tree-based structural navigation. Like `tree`, but int
 - **Adjustable layout** - Toggle outline visibility, resize panes
 - **Rich rendering** - Bold, italic, inline code, lists, blockquotes, code blocks
 
-### ⚡ CLI Mode
+### CLI Mode
 
 - **List headings** - Quick overview of document structure
 - **Tree visualization** - Hierarchical display with box-drawing
