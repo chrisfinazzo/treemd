@@ -59,5 +59,5 @@ pub mod parser;
 pub mod tui;
 
 // Re-export commonly used types for convenience
-pub use parser::{parse_file, parse_markdown, Document, Heading, HeadingNode};
+pub use parser::{Document, Heading, HeadingNode, parse_file, parse_markdown};
 pub use tui::App;
