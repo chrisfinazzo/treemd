@@ -133,23 +133,22 @@ jobs:
       # Windows Code Signing (optional - requires secrets to be configured)
       - name: Code sign Windows binary
         if: runner.os == 'Windows'
-        shell: powershell
+        shell: pwsh
         run: |
-          $trustedSigningConfigured = ("${{ secrets.TRUSTED_SIGNING_ACCOUNT_NAME }}" -ne "")
-          $certificateConfigured = ("${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}" -ne "")
+          # Check if secrets are configured (non-empty)
+          $certBase64 = "${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}"
+          $certPassword = "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}"
 
-          if ($trustedSigningConfigured) {
-            Write-Output "Trusted Signing is configured, but must be done via action step"
-          } elseif ($certificateConfigured) {
+          if ($certBase64 -and $certBase64.Length -gt 0) {
             Write-Output "Signing with EV certificate..."
 
             # Decode certificate
-            [IO.File]::WriteAllBytes("certificate.pfx", [Convert]::FromBase64String("${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}"))
+            [IO.File]::WriteAllBytes("certificate.pfx", [Convert]::FromBase64String($certBase64))
 
             # Sign the binary
             & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64\signtool.exe" sign `
               /f certificate.pfx `
-              /p "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}" `
+              /p $certPassword `
               /t "http://timestamp.comodoca.com/authenticode" `
               /fd sha256 `
               target\${{ matrix.target }}\release\treemd.exe
