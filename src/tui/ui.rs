@@ -345,6 +345,7 @@ fn render_status_bar(frame: &mut Frame, app: &App, area: Rect) {
 
 fn render_help_popup(frame: &mut Frame, app: &App, area: Rect) {
     let popup_area = centered_area(area, 70, 80);
+    let theme = &app.theme;
 
     // Clear the area
     frame.render_widget(Clear, popup_area);
@@ -353,13 +354,13 @@ fn render_help_popup(frame: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![Span::styled(
             "treemd - Keyboard Shortcuts",
             Style::default()
-                .fg(Color::Cyan)
+                .fg(theme.modal_title())
                 .add_modifier(Modifier::BOLD),
         )]),
         Line::from(vec![Span::styled(
             "Use j/k or ↓/↑ to scroll | Press Esc or ? to close",
             Style::default()
-                .fg(Color::Gray)
+                .fg(theme.modal_description())
                 .add_modifier(Modifier::ITALIC),
         )]),
         Line::from(""),
@@ -368,31 +369,31 @@ fn render_help_popup(frame: &mut Frame, app: &App, area: Rect) {
             Style::default().add_modifier(Modifier::BOLD),
         )]),
         Line::from(vec![
-            Span::styled("  j/↓      ", Style::default().fg(Color::Yellow)),
+            Span::styled("  j/↓      ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Move down"),
         ]),
         Line::from(vec![
-            Span::styled("  k/↑      ", Style::default().fg(Color::Yellow)),
+            Span::styled("  k/↑      ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Move up"),
         ]),
         Line::from(vec![
-            Span::styled("  g        ", Style::default().fg(Color::Yellow)),
+            Span::styled("  g        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Jump to top"),
         ]),
         Line::from(vec![
-            Span::styled("  G        ", Style::default().fg(Color::Yellow)),
+            Span::styled("  G        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Jump to bottom"),
         ]),
         Line::from(vec![
-            Span::styled("  p        ", Style::default().fg(Color::Yellow)),
+            Span::styled("  p        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Jump to parent heading"),
         ]),
         Line::from(vec![
-            Span::styled("  d        ", Style::default().fg(Color::Yellow)),
+            Span::styled("  d        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Page down (content)"),
         ]),
         Line::from(vec![
-            Span::styled("  u        ", Style::default().fg(Color::Yellow)),
+            Span::styled("  u        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Page up (content)"),
         ]),
         Line::from(""),
@@ -401,15 +402,15 @@ fn render_help_popup(frame: &mut Frame, app: &App, area: Rect) {
             Style::default().add_modifier(Modifier::BOLD),
         )]),
         Line::from(vec![
-            Span::styled("  Enter/Space ", Style::default().fg(Color::Yellow)),
+            Span::styled("  Enter/Space ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Toggle expand/collapse"),
         ]),
         Line::from(vec![
-            Span::styled("  l/→      ", Style::default().fg(Color::Yellow)),
+            Span::styled("  l/→      ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Expand heading"),
         ]),
         Line::from(vec![
-            Span::styled("  h/←      ", Style::default().fg(Color::Yellow)),
+            Span::styled("  h/←      ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Collapse (or parent if no children)"),
         ]),
         Line::from(""),
@@ -418,19 +419,19 @@ fn render_help_popup(frame: &mut Frame, app: &App, area: Rect) {
             Style::default().add_modifier(Modifier::BOLD),
         )]),
         Line::from(vec![
-            Span::styled("  Tab      ", Style::default().fg(Color::Yellow)),
+            Span::styled("  Tab      ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Switch between Outline and Content"),
         ]),
         Line::from(vec![
-            Span::styled("  /        ", Style::default().fg(Color::Yellow)),
+            Span::styled("  /        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Search/filter headings"),
         ]),
         Line::from(vec![
-            Span::styled("  ?        ", Style::default().fg(Color::Yellow)),
+            Span::styled("  ?        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Toggle this help"),
         ]),
         Line::from(vec![
-            Span::styled("  q/Esc    ", Style::default().fg(Color::Yellow)),
+            Span::styled("  q/Esc    ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Quit"),
         ]),
         Line::from(""),
@@ -439,23 +440,23 @@ fn render_help_popup(frame: &mut Frame, app: &App, area: Rect) {
             Style::default().add_modifier(Modifier::BOLD),
         )]),
         Line::from(vec![
-            Span::styled("  w        ", Style::default().fg(Color::Cyan)),
+            Span::styled("  w        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Toggle outline visibility (full-width content)"),
         ]),
         Line::from(vec![
-            Span::styled("  [ ]      ", Style::default().fg(Color::Cyan)),
+            Span::styled("  [ ]      ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Decrease/increase outline width (20%, 30%, 40%)"),
         ]),
         Line::from(vec![
-            Span::styled("  1-9      ", Style::default().fg(Color::Cyan)),
+            Span::styled("  1-9      ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Jump to heading 1-9"),
         ]),
         Line::from(vec![
-            Span::styled("  m        ", Style::default().fg(Color::Cyan)),
+            Span::styled("  m        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Set bookmark (shows ⚑ indicator)"),
         ]),
         Line::from(vec![
-            Span::styled("  '        ", Style::default().fg(Color::Cyan)),
+            Span::styled("  '        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Jump to bookmarked position"),
         ]),
         Line::from(""),
@@ -464,31 +465,31 @@ fn render_help_popup(frame: &mut Frame, app: &App, area: Rect) {
             Style::default().add_modifier(Modifier::BOLD),
         )]),
         Line::from(vec![
-            Span::styled("  f        ", Style::default().fg(Color::Green)),
+            Span::styled("  f        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Enter link follow mode"),
         ]),
         Line::from(vec![
-            Span::styled("  Tab      ", Style::default().fg(Color::Green)),
+            Span::styled("  Tab      ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Cycle through links (in link mode)"),
         ]),
         Line::from(vec![
-            Span::styled("  1-9      ", Style::default().fg(Color::Green)),
+            Span::styled("  1-9      ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Jump to link by number (in link mode)"),
         ]),
         Line::from(vec![
-            Span::styled("  Enter    ", Style::default().fg(Color::Green)),
+            Span::styled("  Enter    ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Follow selected link (in link mode)"),
         ]),
         Line::from(vec![
-            Span::styled("  p        ", Style::default().fg(Color::Green)),
+            Span::styled("  p        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Jump to parent's links (stay in link mode)"),
         ]),
         Line::from(vec![
-            Span::styled("  b/Bksp   ", Style::default().fg(Color::Green)),
+            Span::styled("  b/Bksp   ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Go back to previous file"),
         ]),
         Line::from(vec![
-            Span::styled("  F        ", Style::default().fg(Color::Green)),
+            Span::styled("  F        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Go forward in navigation history"),
         ]),
         Line::from(""),
@@ -497,19 +498,19 @@ fn render_help_popup(frame: &mut Frame, app: &App, area: Rect) {
             Style::default().add_modifier(Modifier::BOLD),
         )]),
         Line::from(vec![
-            Span::styled("  t        ", Style::default().fg(Color::Magenta)),
+            Span::styled("  t        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Cycle color theme"),
         ]),
         Line::from(vec![
-            Span::styled("  y        ", Style::default().fg(Color::Magenta)),
+            Span::styled("  y        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Copy current section content (works in all modes)"),
         ]),
         Line::from(vec![
-            Span::styled("  Y        ", Style::default().fg(Color::Magenta)),
+            Span::styled("  Y        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Copy anchor link (works in all modes)"),
         ]),
         Line::from(vec![
-            Span::styled("  e        ", Style::default().fg(Color::Magenta)),
+            Span::styled("  e        ", Style::default().fg(theme.modal_key_fg())),
             Span::raw("Edit file in default editor ($VISUAL or $EDITOR)"),
         ]),
         Line::from(""),
@@ -517,19 +518,19 @@ fn render_help_popup(frame: &mut Frame, app: &App, area: Rect) {
             Span::styled(
                 "Note: ",
                 Style::default()
-                    .fg(Color::Yellow)
+                    .fg(theme.modal_selected_marker())
                     .add_modifier(Modifier::BOLD),
             ),
             Span::styled(
                 "On Linux, install a clipboard manager (clipit, parcellite, xclip) for best results",
-                Style::default().fg(Color::Gray),
+                Style::default().fg(theme.modal_description()),
             ),
         ]),
         Line::from(""),
         Line::from(vec![Span::styled(
             "Use j/k or ↓/↑ to scroll | Press Esc or ? to close",
             Style::default()
-                .fg(Color::Gray)
+                .fg(theme.modal_description())
                 .add_modifier(Modifier::ITALIC),
         )]),
     ];
@@ -540,9 +541,9 @@ fn render_help_popup(frame: &mut Frame, app: &App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Cyan))
+                .border_style(Style::default().fg(theme.modal_border()))
                 .title(" Help ")
-                .style(Style::default().bg(Color::Rgb(20, 20, 40))),
+                .style(Style::default().bg(theme.modal_bg())),
         )
         .wrap(Wrap { trim: false })
         .scroll((app.help_scroll, 0));
@@ -553,7 +554,7 @@ fn render_help_popup(frame: &mut Frame, app: &App, area: Rect) {
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
         .begin_symbol(Some("↑"))
         .end_symbol(Some("↓"))
-        .style(Style::default().fg(Color::Cyan));
+        .style(Style::default().fg(theme.modal_border()));
 
     let mut scrollbar_state = ScrollbarState::new(help_text_len).position(app.help_scroll as usize);
 
@@ -578,6 +579,8 @@ fn centered_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
 fn render_link_picker(frame: &mut Frame, app: &App, area: Rect) {
     use crate::parser::LinkTarget;
 
+    let theme = &app.theme;
+
     // Create centered popup area (smaller than full screen)
     let popup_area = centered_area(area, 80, 60);
 
@@ -592,7 +595,7 @@ fn render_link_picker(frame: &mut Frame, app: &App, area: Rect) {
                 app.links_in_view.len()
             ),
             Style::default()
-                .fg(Color::Cyan)
+                .fg(theme.modal_title())
                 .add_modifier(Modifier::BOLD),
         )]),
         Line::from(""),
@@ -631,19 +634,19 @@ fn render_link_picker(frame: &mut Frame, app: &App, area: Rect) {
                 Span::styled(
                     "▶ ",
                     Style::default()
-                        .fg(Color::Green)
+                        .fg(theme.modal_selected_marker())
                         .add_modifier(Modifier::BOLD),
                 ),
                 Span::styled(
                     number,
                     Style::default()
-                        .fg(Color::Yellow)
+                        .fg(theme.modal_key_fg())
                         .add_modifier(Modifier::BOLD),
                 ),
                 Span::styled(
                     link_text,
                     Style::default()
-                        .fg(Color::White)
+                        .fg(theme.modal_selected_fg())
                         .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
                 ),
             ]));
@@ -651,17 +654,17 @@ fn render_link_picker(frame: &mut Frame, app: &App, area: Rect) {
             lines.push(Line::from(vec![Span::styled(
                 format!("  → {}", target_str),
                 Style::default()
-                    .fg(Color::Gray)
+                    .fg(theme.modal_description())
                     .add_modifier(Modifier::ITALIC),
             )]));
         } else {
             lines.push(Line::from(vec![
                 Span::styled("  ", Style::default()),
-                Span::styled(number, Style::default().fg(Color::DarkGray)),
-                Span::styled(link_text, Style::default().fg(Color::Gray)),
+                Span::styled(number, Style::default().fg(theme.modal_description())),
+                Span::styled(link_text, Style::default().fg(theme.modal_text())),
                 Span::styled(
                     format!(" → {}", target_str),
-                    Style::default().fg(Color::DarkGray),
+                    Style::default().fg(theme.modal_description()),
                 ),
             ]));
         }
@@ -677,7 +680,7 @@ fn render_link_picker(frame: &mut Frame, app: &App, area: Rect) {
     lines.push(Line::from(vec![Span::styled(
         "Tab/j/k: Navigate • 1-9: Jump • p: Parent • Enter: Follow • Esc: Cancel",
         Style::default()
-            .fg(Color::Gray)
+            .fg(theme.modal_description())
             .add_modifier(Modifier::ITALIC),
     )]));
 
@@ -685,9 +688,9 @@ fn render_link_picker(frame: &mut Frame, app: &App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Green))
+                .border_style(Style::default().fg(theme.modal_border()))
                 .title(" Link Navigator ")
-                .style(Style::default().bg(Color::Rgb(20, 20, 40))),
+                .style(Style::default().bg(theme.modal_bg())),
         )
         .wrap(Wrap { trim: false });
 
@@ -895,6 +898,8 @@ fn render_search_overlay(frame: &mut Frame, app: &App, area: Rect) {
 fn render_theme_picker(frame: &mut Frame, app: &App, area: Rect) {
     use crate::tui::theme::ThemeName;
 
+    let theme = &app.theme;
+
     // All available themes
     let themes = [
         (
@@ -942,7 +947,7 @@ fn render_theme_picker(frame: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![Span::styled(
             "Select Theme (j/k to navigate, Enter to apply, Esc to cancel)",
             Style::default()
-                .fg(Color::Gray)
+                .fg(theme.modal_description())
                 .add_modifier(Modifier::ITALIC),
         )]),
         Line::from(""),
@@ -956,11 +961,11 @@ fn render_theme_picker(frame: &mut Frame, app: &App, area: Rect) {
             (
                 "▶ ",
                 Style::default()
-                    .fg(Color::Cyan)
+                    .fg(theme.modal_selected_fg())
                     .add_modifier(Modifier::BOLD),
             )
         } else {
-            ("  ", Style::default().fg(Color::White))
+            ("  ", Style::default().fg(theme.modal_text()))
         };
 
         let current_marker = if is_current { " ✓" } else { "" };
@@ -973,7 +978,7 @@ fn render_theme_picker(frame: &mut Frame, app: &App, area: Rect) {
             lines.push(Line::from(vec![Span::styled(
                 format!("  {}", description),
                 Style::default()
-                    .fg(Color::Gray)
+                    .fg(theme.modal_description())
                     .add_modifier(Modifier::ITALIC),
             )]));
         }
@@ -985,9 +990,9 @@ fn render_theme_picker(frame: &mut Frame, app: &App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Cyan))
+                .border_style(Style::default().fg(theme.modal_border()))
                 .title(" Theme Selector ")
-                .style(Style::default().bg(Color::Rgb(20, 20, 30))),
+                .style(Style::default().bg(theme.modal_bg())),
         )
         .wrap(Wrap { trim: false });
 
