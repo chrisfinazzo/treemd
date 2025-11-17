@@ -338,6 +338,77 @@ impl Theme {
         Style::default().fg(self.code_fence)
     }
 
+    // Modal/popup color helpers (already respects color mode since theme is converted)
+    pub fn modal_bg(&self) -> Color {
+        self.selection_bg
+    }
+
+    pub fn modal_border(&self) -> Color {
+        self.border_focused
+    }
+
+    pub fn modal_title(&self) -> Color {
+        self.border_focused
+    }
+
+    pub fn modal_text(&self) -> Color {
+        self.foreground
+    }
+
+    pub fn modal_selected_fg(&self) -> Color {
+        self.border_focused
+    }
+
+    pub fn modal_selected_marker(&self) -> Color {
+        self.list_bullet
+    }
+
+    pub fn modal_key_fg(&self) -> Color {
+        self.heading_3
+    }
+
+    pub fn modal_description(&self) -> Color {
+        self.blockquote_fg
+    }
+
+    /// Apply custom color overrides from config
+    pub fn with_custom_colors(mut self, custom: &crate::config::CustomThemeConfig) -> Self {
+        // Helper macro to apply color override if present
+        macro_rules! apply_color {
+            ($field:ident) => {
+                if let Some(ref color_value) = custom.$field {
+                    if let Some(color) = color_value.to_color() {
+                        self.$field = color;
+                    }
+                }
+            };
+        }
+
+        apply_color!(background);
+        apply_color!(foreground);
+        apply_color!(heading_1);
+        apply_color!(heading_2);
+        apply_color!(heading_3);
+        apply_color!(heading_4);
+        apply_color!(heading_5);
+        apply_color!(border_focused);
+        apply_color!(border_unfocused);
+        apply_color!(selection_bg);
+        apply_color!(selection_fg);
+        apply_color!(status_bar_bg);
+        apply_color!(status_bar_fg);
+        apply_color!(inline_code_fg);
+        apply_color!(inline_code_bg);
+        apply_color!(bold_fg);
+        apply_color!(italic_fg);
+        apply_color!(list_bullet);
+        apply_color!(blockquote_border);
+        apply_color!(blockquote_fg);
+        apply_color!(code_fence);
+
+        self
+    }
+
     /// Apply color mode to theme (convert RGB to 256-color if needed)
     pub fn with_color_mode(mut self, mode: ColorMode) -> Self {
         match mode {
