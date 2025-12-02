@@ -63,8 +63,15 @@ cargo install --path .
 
 ### Using a package manager
 
-`treemd` is available as a native package on NetBSD.
-To install it, simply run:
+`treemd` is available as a native package on Arch Linux and NetBSD.
+
+**Arch Linux ([`extra`](https://archlinux.org/packages/extra/x86_64/treemd/) repo):**
+
+```bash
+pacman -S treemd
+```
+
+**NetBSD:**
 
 ```bash
 pkgin install treemd
