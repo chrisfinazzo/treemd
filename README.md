@@ -597,6 +597,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 treemd combines the best of these: **tree-based exploration** + interactive navigation + comfortable reading + CLI scriptability.
 
+## Acknowledgements
+
+[![Built With Ratatui](https://img.shields.io/badge/Built_With_Ratatui-000?logo=ratatui&logoColor=fff)](https://ratatui.rs/)
+
 ## License
 
 MIT
