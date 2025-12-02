@@ -14,11 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Sub-headings now render with proper styling (colored, bold, underlined) matching the screenshot in README
   - Content structure and hierarchy are preserved when viewing sections
 
-- **Link selection visibility in interactive mode** - Selected links now have clear visual highlighting with background color
+- **Link selection visibility in interactive mode** - Selected links now have clear visual highlighting
   - Previously only a block-level arrow indicated selection, making it unclear which specific link was selected
-  - Now selected links get a cyan background highlight (matching table cell selection style)
-  - Arrow indicator also appears on the containing paragraph to help locate the selection
+  - Now selected links show a `▸` prefix indicator that moves with the selection
+  - Plus cyan background highlight (matching table cell selection style)
   - Also applies to images in interactive mode
+
+- **Help popup infinite scroll** - Prevented scrolling past the end of help content ([PR #11](https://github.com/Epistates/treemd/pull/11))
 
 - **Numbered lists with nested code blocks** - Fixed markdown display issue where numbered list items containing code blocks would render incorrectly ([#8](https://github.com/Epistates/treemd/issues/8))
   - List items now properly contain their nested code blocks, blockquotes, and other block elements
@@ -32,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Now all links show target inline (e.g., `[1] Link Text → target`) for stable navigation
 
 ### Refactored
+
+- **Help text module** - Extracted help text content into dedicated `src/tui/help_text.rs` module ([PR #11](https://github.com/Epistates/treemd/pull/11))
+  - Uses typed `HelpLine` enum for clean separation of data and rendering
+  - Compile-time const construction with `const fn` builders
+  - Makes help content easily maintainable and extensible
 
 - **TUI UI module architecture** - Refactored monolithic `ui.rs` (~1700 lines) into modular components for better maintainability
   - `ui/mod.rs` (~940 lines) - Core rendering orchestration

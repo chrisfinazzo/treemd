@@ -161,12 +161,12 @@ impl InteractiveState {
                     current_line += lines;
                 }
                 Block::Paragraph { inline, .. } => {
-                    // Extract links from inline elements
-                    for inline_elem in inline {
+                    // Extract links from inline elements (track index for selection highlighting)
+                    for (inline_idx, inline_elem) in inline.iter().enumerate() {
                         if let InlineElement::Link { text, url, .. } = inline_elem {
                             let id = ElementId {
                                 block_idx,
-                                sub_idx: None,
+                                sub_idx: Some(inline_idx),
                             };
 
                             // Parse link target
