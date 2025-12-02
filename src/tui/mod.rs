@@ -240,7 +240,7 @@ pub fn run(terminal: &mut DefaultTerminal, app: App) -> Result<()> {
                         }
 
                         match key.code {
-                            KeyCode::Esc => app.exit_interactive_mode(),
+                            KeyCode::Esc | KeyCode::Char('i') => app.exit_interactive_mode(),
                             KeyCode::Tab => {
                                 if key.modifiers.contains(KeyModifiers::SHIFT) {
                                     app.interactive_state.previous();
