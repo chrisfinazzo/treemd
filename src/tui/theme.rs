@@ -37,6 +37,12 @@ pub struct Theme {
     pub blockquote_border: Color,
     pub blockquote_fg: Color,
     pub code_fence: Color,
+    pub title_bar_fg: Color,
+    pub scrollbar_fg: Color,
+    pub selection_indicator_fg: Color,
+    pub link_fg: Color,
+    pub link_selected_bg: Color,
+    pub table_border: Color,
 }
 
 impl Theme {
@@ -91,6 +97,12 @@ impl Theme {
             blockquote_border: Color::Rgb(150, 150, 150),
             blockquote_fg: Color::Rgb(150, 150, 150),
             code_fence: Color::Rgb(150, 180, 200),
+            title_bar_fg: Color::Rgb(100, 200, 255),
+            scrollbar_fg: Color::Rgb(80, 80, 100),
+            selection_indicator_fg: Color::Rgb(100, 200, 255),
+            link_fg: Color::Rgb(100, 150, 255),
+            link_selected_bg: Color::Rgb(100, 200, 255),
+            table_border: Color::Rgb(100, 100, 120),
         }
     }
 
@@ -119,6 +131,12 @@ impl Theme {
             blockquote_border: Color::Rgb(76, 86, 106),
             blockquote_fg: Color::Rgb(76, 86, 106),
             code_fence: Color::Rgb(143, 188, 187),
+            title_bar_fg: Color::Rgb(136, 192, 208),
+            scrollbar_fg: Color::Rgb(76, 86, 106),
+            selection_indicator_fg: Color::Rgb(136, 192, 208),
+            link_fg: Color::Rgb(129, 161, 193),
+            link_selected_bg: Color::Rgb(136, 192, 208),
+            table_border: Color::Rgb(76, 86, 106),
         }
     }
 
@@ -147,6 +165,12 @@ impl Theme {
             blockquote_border: Color::Rgb(98, 114, 164),
             blockquote_fg: Color::Rgb(98, 114, 164),
             code_fence: Color::Rgb(189, 147, 249),
+            title_bar_fg: Color::Rgb(139, 233, 253),
+            scrollbar_fg: Color::Rgb(68, 71, 90),
+            selection_indicator_fg: Color::Rgb(139, 233, 253),
+            link_fg: Color::Rgb(139, 233, 253),
+            link_selected_bg: Color::Rgb(139, 233, 253),
+            table_border: Color::Rgb(98, 114, 164),
         }
     }
 
@@ -175,6 +199,12 @@ impl Theme {
             blockquote_border: Color::Rgb(88, 110, 117),
             blockquote_fg: Color::Rgb(88, 110, 117),
             code_fence: Color::Rgb(42, 161, 152),
+            title_bar_fg: Color::Rgb(38, 139, 210),
+            scrollbar_fg: Color::Rgb(88, 110, 117),
+            selection_indicator_fg: Color::Rgb(38, 139, 210),
+            link_fg: Color::Rgb(38, 139, 210),
+            link_selected_bg: Color::Rgb(38, 139, 210),
+            table_border: Color::Rgb(88, 110, 117),
         }
     }
 
@@ -203,6 +233,12 @@ impl Theme {
             blockquote_border: Color::Rgb(117, 113, 94),
             blockquote_fg: Color::Rgb(117, 113, 94),
             code_fence: Color::Rgb(102, 217, 239),
+            title_bar_fg: Color::Rgb(102, 217, 239),
+            scrollbar_fg: Color::Rgb(117, 113, 94),
+            selection_indicator_fg: Color::Rgb(102, 217, 239),
+            link_fg: Color::Rgb(102, 217, 239),
+            link_selected_bg: Color::Rgb(102, 217, 239),
+            table_border: Color::Rgb(117, 113, 94),
         }
     }
 
@@ -231,6 +267,12 @@ impl Theme {
             blockquote_border: Color::Rgb(146, 131, 116),
             blockquote_fg: Color::Rgb(146, 131, 116),
             code_fence: Color::Rgb(131, 165, 152),
+            title_bar_fg: Color::Rgb(131, 165, 152),
+            scrollbar_fg: Color::Rgb(146, 131, 116),
+            selection_indicator_fg: Color::Rgb(131, 165, 152),
+            link_fg: Color::Rgb(131, 165, 152),
+            link_selected_bg: Color::Rgb(131, 165, 152),
+            table_border: Color::Rgb(146, 131, 116),
         }
     }
 
@@ -259,6 +301,12 @@ impl Theme {
             blockquote_border: Color::Rgb(86, 95, 137), // Comment
             blockquote_fg: Color::Rgb(169, 177, 214),   // Fg dark
             code_fence: Color::Rgb(125, 207, 255),      // Cyan
+            title_bar_fg: Color::Rgb(122, 162, 247),
+            scrollbar_fg: Color::Rgb(86, 95, 137),
+            selection_indicator_fg: Color::Rgb(122, 162, 247),
+            link_fg: Color::Rgb(122, 162, 247),
+            link_selected_bg: Color::Rgb(122, 162, 247),
+            table_border: Color::Rgb(86, 95, 137),
         }
     }
 
@@ -287,6 +335,12 @@ impl Theme {
             blockquote_border: Color::Rgb(108, 112, 134), // Overlay 0
             blockquote_fg: Color::Rgb(147, 153, 178),     // Overlay 2
             code_fence: Color::Rgb(116, 199, 236),        // Sapphire
+            title_bar_fg: Color::Rgb(137, 180, 250),      // Blue
+            scrollbar_fg: Color::Rgb(108, 112, 134),      // Overlay 0
+            selection_indicator_fg: Color::Rgb(137, 180, 250), // Blue
+            link_fg: Color::Rgb(137, 180, 250),           // Blue
+            link_selected_bg: Color::Rgb(137, 180, 250),  // Blue
+            table_border: Color::Rgb(108, 112, 134),      // Overlay 0
         }
     }
 
@@ -317,6 +371,12 @@ impl Theme {
             blockquote_border: Color::Indexed(246),
             blockquote_fg: Color::Indexed(246),
             code_fence: Color::Indexed(152),
+            title_bar_fg: Color::Indexed(117),
+            scrollbar_fg: Color::Indexed(240),
+            selection_indicator_fg: Color::Indexed(117),
+            link_fg: Color::Indexed(111),
+            link_selected_bg: Color::Indexed(117),
+            table_border: Color::Indexed(241),
         }
     }
 
@@ -345,6 +405,12 @@ impl Theme {
             blockquote_border: Color::Indexed(240),
             blockquote_fg: Color::Indexed(240),
             code_fence: Color::Indexed(109),
+            title_bar_fg: Color::Indexed(109),
+            scrollbar_fg: Color::Indexed(240),
+            selection_indicator_fg: Color::Indexed(109),
+            link_fg: Color::Indexed(110),
+            link_selected_bg: Color::Indexed(109),
+            table_border: Color::Indexed(240),
         }
     }
 
@@ -373,6 +439,12 @@ impl Theme {
             blockquote_border: Color::Indexed(61),
             blockquote_fg: Color::Indexed(61),
             code_fence: Color::Indexed(141), // Purple
+            title_bar_fg: Color::Indexed(117),
+            scrollbar_fg: Color::Indexed(238),
+            selection_indicator_fg: Color::Indexed(117),
+            link_fg: Color::Indexed(117),
+            link_selected_bg: Color::Indexed(117),
+            table_border: Color::Indexed(61),
         }
     }
 
@@ -401,6 +473,12 @@ impl Theme {
             blockquote_border: Color::Indexed(240),
             blockquote_fg: Color::Indexed(240),
             code_fence: Color::Indexed(37), // Cyan
+            title_bar_fg: Color::Indexed(33),
+            scrollbar_fg: Color::Indexed(240),
+            selection_indicator_fg: Color::Indexed(33),
+            link_fg: Color::Indexed(33),
+            link_selected_bg: Color::Indexed(33),
+            table_border: Color::Indexed(240),
         }
     }
 
@@ -429,6 +507,12 @@ impl Theme {
             blockquote_border: Color::Indexed(241),
             blockquote_fg: Color::Indexed(241),
             code_fence: Color::Indexed(81), // Cyan
+            title_bar_fg: Color::Indexed(81),
+            scrollbar_fg: Color::Indexed(241),
+            selection_indicator_fg: Color::Indexed(81),
+            link_fg: Color::Indexed(81),
+            link_selected_bg: Color::Indexed(81),
+            table_border: Color::Indexed(241),
         }
     }
 
@@ -457,6 +541,12 @@ impl Theme {
             blockquote_border: Color::Indexed(243),
             blockquote_fg: Color::Indexed(243),
             code_fence: Color::Indexed(108), // Aqua
+            title_bar_fg: Color::Indexed(108),
+            scrollbar_fg: Color::Indexed(243),
+            selection_indicator_fg: Color::Indexed(108),
+            link_fg: Color::Indexed(108),
+            link_selected_bg: Color::Indexed(108),
+            table_border: Color::Indexed(243),
         }
     }
 
@@ -485,6 +575,12 @@ impl Theme {
             blockquote_border: Color::Indexed(243),
             blockquote_fg: Color::Indexed(189),
             code_fence: Color::Indexed(117), // Cyan
+            title_bar_fg: Color::Indexed(110),
+            scrollbar_fg: Color::Indexed(243),
+            selection_indicator_fg: Color::Indexed(110),
+            link_fg: Color::Indexed(110),
+            link_selected_bg: Color::Indexed(110),
+            table_border: Color::Indexed(243),
         }
     }
 
@@ -513,6 +609,12 @@ impl Theme {
             blockquote_border: Color::Indexed(242),
             blockquote_fg: Color::Indexed(245),
             code_fence: Color::Indexed(116), // Sapphire
+            title_bar_fg: Color::Indexed(117),
+            scrollbar_fg: Color::Indexed(242),
+            selection_indicator_fg: Color::Indexed(117),
+            link_fg: Color::Indexed(117),
+            link_selected_bg: Color::Indexed(117),
+            table_border: Color::Indexed(242),
         }
     }
 
@@ -653,6 +755,12 @@ impl Theme {
         apply_color!(blockquote_border);
         apply_color!(blockquote_fg);
         apply_color!(code_fence);
+        apply_color!(title_bar_fg);
+        apply_color!(scrollbar_fg);
+        apply_color!(selection_indicator_fg);
+        apply_color!(link_fg);
+        apply_color!(link_selected_bg);
+        apply_color!(table_border);
 
         self
     }
@@ -695,6 +803,12 @@ impl Theme {
                 self.blockquote_border = rgb_to_256(self.blockquote_border);
                 self.blockquote_fg = rgb_to_256(self.blockquote_fg);
                 self.code_fence = rgb_to_256(self.code_fence);
+                self.title_bar_fg = rgb_to_256(self.title_bar_fg);
+                self.scrollbar_fg = rgb_to_256(self.scrollbar_fg);
+                self.selection_indicator_fg = rgb_to_256(self.selection_indicator_fg);
+                self.link_fg = rgb_to_256(self.link_fg);
+                self.link_selected_bg = rgb_to_256(self.link_selected_bg);
+                self.table_border = rgb_to_256(self.table_border);
                 self
             }
         }

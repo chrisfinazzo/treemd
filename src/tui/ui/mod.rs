@@ -95,7 +95,7 @@ fn render_title_bar(frame: &mut Frame, app: &App, area: Rect) {
     let title = Paragraph::new(title_text)
         .style(
             Style::default()
-                .fg(Color::Rgb(100, 200, 255))
+                .fg(app.theme.title_bar_fg)
                 .add_modifier(Modifier::BOLD),
         )
         .block(Block::default().borders(Borders::BOTTOM));
@@ -173,7 +173,7 @@ fn render_outline(frame: &mut Frame, app: &mut App, area: Rect) {
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
         .begin_symbol(Some("↑"))
         .end_symbol(Some("↓"))
-        .style(Style::default().fg(Color::Rgb(80, 80, 100)));
+        .style(Style::default().fg(theme.scrollbar_fg));
 
     frame.render_stateful_widget(
         scrollbar,
@@ -251,7 +251,7 @@ fn render_content(frame: &mut Frame, app: &App, area: Rect) {
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
         .begin_symbol(Some("↑"))
         .end_symbol(Some("↓"))
-        .style(Style::default().fg(Color::Rgb(80, 80, 100)));
+        .style(Style::default().fg(theme.scrollbar_fg));
 
     frame.render_stateful_widget(
         scrollbar,
@@ -444,7 +444,7 @@ fn render_markdown_enhanced(
                         Span::styled(
                             "→ ",
                             Style::default()
-                                .fg(Color::Rgb(100, 200, 255))
+                                .fg(theme.selection_indicator_fg)
                                 .add_modifier(Modifier::BOLD),
                         ),
                     );
@@ -466,7 +466,7 @@ fn render_markdown_enhanced(
                         Span::styled(
                             "→ ",
                             Style::default()
-                                .fg(Color::Rgb(100, 200, 255))
+                                .fg(theme.selection_indicator_fg)
                                 .add_modifier(Modifier::BOLD),
                         ),
                     );
@@ -485,7 +485,7 @@ fn render_markdown_enhanced(
                     fence_spans.push(Span::styled(
                         "→ ",
                         Style::default()
-                            .fg(Color::Rgb(100, 200, 255))
+                            .fg(theme.selection_indicator_fg)
                             .add_modifier(Modifier::BOLD),
                     ));
                 }
@@ -529,7 +529,7 @@ fn render_markdown_enhanced(
                                     spans.push(Span::styled(
                                         "→ ",
                                         Style::default()
-                                            .fg(Color::Rgb(100, 200, 255))
+                                            .fg(theme.selection_indicator_fg)
                                             .add_modifier(Modifier::BOLD),
                                     ));
                                 }
@@ -600,7 +600,7 @@ fn render_markdown_enhanced(
                             spans.push(Span::styled(
                                 "→ ",
                                 Style::default()
-                                    .fg(Color::Rgb(100, 200, 255))
+                                    .fg(theme.selection_indicator_fg)
                                     .add_modifier(Modifier::BOLD),
                             ));
                         }
@@ -714,7 +714,7 @@ fn render_markdown_enhanced(
                     image_spans.push(Span::styled(
                         "→ ",
                         Style::default()
-                            .fg(Color::Rgb(100, 200, 255))
+                            .fg(theme.selection_indicator_fg)
                             .add_modifier(Modifier::BOLD),
                     ));
                 }
@@ -752,7 +752,7 @@ fn render_markdown_enhanced(
                     summary_spans.push(Span::styled(
                         "→ ",
                         Style::default()
-                            .fg(Color::Rgb(100, 200, 255))
+                            .fg(theme.selection_indicator_fg)
                             .add_modifier(Modifier::BOLD),
                     ));
                 }
@@ -924,7 +924,7 @@ fn render_inline_elements(
                     spans.push(Span::styled(
                         "▸ ",
                         Style::default()
-                            .fg(Color::Rgb(100, 200, 255))
+                            .fg(theme.selection_indicator_fg)
                             .add_modifier(Modifier::BOLD),
                     ));
                 }
@@ -932,12 +932,12 @@ fn render_inline_elements(
                     // Highlighted selected link - matches table cell selection style
                     Style::default()
                         .fg(Color::Black)
-                        .bg(Color::Rgb(100, 200, 255))
+                        .bg(theme.link_selected_bg)
                         .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
                 } else {
                     // Normal link style
                     Style::default()
-                        .fg(Color::Rgb(100, 150, 255))
+                        .fg(theme.link_fg)
                         .add_modifier(Modifier::UNDERLINED)
                 };
                 spans.push(Span::styled(text.clone(), style));
@@ -956,7 +956,7 @@ fn render_inline_elements(
                     spans.push(Span::styled(
                         "▸ ",
                         Style::default()
-                            .fg(Color::Rgb(100, 200, 255))
+                            .fg(theme.selection_indicator_fg)
                             .add_modifier(Modifier::BOLD),
                     ));
                 }
@@ -964,7 +964,7 @@ fn render_inline_elements(
                     // Highlighted selected image
                     Style::default()
                         .fg(Color::Black)
-                        .bg(Color::Rgb(100, 200, 255))
+                        .bg(theme.link_selected_bg)
                         .add_modifier(Modifier::BOLD)
                 } else {
                     Style::default().fg(Color::Rgb(180, 180, 200))

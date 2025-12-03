@@ -72,7 +72,7 @@ pub fn render_table(
         top_border_spans.push(Span::styled(
             "→ ",
             Style::default()
-                .fg(Color::Rgb(100, 200, 255))
+                .fg(theme.selection_indicator_fg)
                 .add_modifier(Modifier::BOLD),
         ));
     }
@@ -87,7 +87,7 @@ pub fn render_table(
     top_border.push('┐');
     top_border_spans.push(Span::styled(
         top_border,
-        Style::default().fg(Color::Rgb(100, 100, 120)),
+        Style::default().fg(theme.table_border),
     ));
     lines.push(Line::from(top_border_spans));
 
@@ -122,7 +122,7 @@ pub fn render_table(
     separator.push('┤');
     separator_spans.push(Span::styled(
         separator,
-        Style::default().fg(Color::Rgb(100, 100, 120)),
+        Style::default().fg(theme.table_border),
     ));
     lines.push(Line::from(separator_spans));
 
@@ -160,7 +160,7 @@ pub fn render_table(
     bottom_border.push('┘');
     bottom_border_spans.push(Span::styled(
         bottom_border,
-        Style::default().fg(Color::Rgb(100, 100, 120)),
+        Style::default().fg(theme.table_border),
     ));
     lines.push(Line::from(bottom_border_spans));
 
@@ -190,7 +190,7 @@ pub fn render_table_row(
             spans.push(Span::styled(
                 "→ ",
                 Style::default()
-                    .fg(Color::Rgb(100, 200, 255))
+                    .fg(ctx.theme.selection_indicator_fg)
                     .add_modifier(Modifier::BOLD),
             ));
         } else {
@@ -203,7 +203,7 @@ pub fn render_table_row(
 
     spans.push(Span::styled(
         "│",
-        Style::default().fg(Color::Rgb(100, 100, 120)),
+        Style::default().fg(ctx.theme.table_border),
     ));
 
     for (i, cell) in cells.iter().enumerate() {
@@ -219,7 +219,7 @@ pub fn render_table_row(
             // Highlighted selected cell
             Style::default()
                 .fg(Color::Black)
-                .bg(Color::Rgb(100, 200, 255))
+                .bg(ctx.theme.link_selected_bg)
                 .add_modifier(Modifier::BOLD)
         } else if ctx.is_header {
             Style::default()
@@ -232,7 +232,7 @@ pub fn render_table_row(
         spans.push(Span::styled(cell_text, style));
         spans.push(Span::styled(
             "│",
-            Style::default().fg(Color::Rgb(100, 100, 120)),
+            Style::default().fg(ctx.theme.table_border),
         ));
     }
 
