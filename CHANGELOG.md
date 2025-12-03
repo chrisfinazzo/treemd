@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.2] - 2025-12-02
 
+### Added
+
+- **Themeable UI colors** - Replaced hardcoded colors with theme-based colors for better customization
+  - Added 6 new themeable color fields: `title_bar_fg`, `scrollbar_fg`, `selection_indicator_fg`, `link_fg`, `link_selected_bg`, `table_border`
+  - All 8 themes now include appropriate colors for these new fields (both RGB and 256-color variants)
+  - Users can now customize title bar, scrollbars, selection indicators, links, and table borders via config file
+  - Consistent theming across all UI elements
+
 ### Fixed
 
 - **Sub-headings not displayed in content pane** - Fixed regression where sub-headings within a section were not rendered in the content pane ([#10](https://github.com/Epistates/treemd/issues/10))
