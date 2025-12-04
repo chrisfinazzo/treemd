@@ -40,6 +40,30 @@ pub enum LinkTarget {
     External(String),
 }
 
+impl LinkTarget {
+    /// Get a string representation of the link target for display/search
+    pub fn as_str(&self) -> String {
+        match self {
+            LinkTarget::Anchor(a) => format!("#{}", a),
+            LinkTarget::RelativeFile { path, anchor } => {
+                if let Some(a) = anchor {
+                    format!("{}#{}", path.display(), a)
+                } else {
+                    path.display().to_string()
+                }
+            }
+            LinkTarget::WikiLink { target, alias } => {
+                if let Some(a) = alias {
+                    format!("[[{}|{}]]", target, a)
+                } else {
+                    format!("[[{}]]", target)
+                }
+            }
+            LinkTarget::External(url) => url.clone(),
+        }
+    }
+}
+
 impl Link {
     /// Create a new link.
     pub fn new(text: String, target: LinkTarget, offset: usize) -> Self {
