@@ -5,10 +5,11 @@ mod util;
 
 use layout::{DynamicLayout, Section};
 
-use crate::tui::app::{App, Focus};
+use crate::tui::app::{App, AppMode, Focus};
 use crate::tui::theme::Theme;
 use popups::{
-    render_cell_edit_overlay, render_help_popup, render_link_picker, render_theme_picker,
+    render_cell_edit_overlay, render_file_create_confirm, render_help_popup, render_link_picker,
+    render_theme_picker,
 };
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -90,6 +91,13 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     // Render link picker if in link follow mode with links
     if matches!(app.mode, crate::tui::app::AppMode::LinkFollow) && !app.links_in_view.is_empty() {
         render_link_picker(frame, app, area);
+    }
+
+    // Render file creation confirmation dialog
+    if matches!(app.mode, AppMode::ConfirmFileCreate) {
+        if let Some(message) = &app.pending_file_create_message {
+            render_file_create_confirm(frame, message, &app.theme);
+        }
     }
 }
 

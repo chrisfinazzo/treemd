@@ -25,6 +25,7 @@ pub enum AppMode {
     ThemePicker,
     Help,
     CellEdit,
+    ConfirmFileCreate,
 }
 
 pub struct App {
@@ -87,6 +88,10 @@ pub struct App {
 
     // Raw source view toggle
     pub show_raw_source: bool,
+
+    // Pending file creation (for confirm dialog)
+    pub pending_file_create: Option<PathBuf>,
+    pub pending_file_create_message: Option<String>,
 }
 
 /// Saved state for file navigation history
@@ -195,6 +200,10 @@ impl App {
 
             // Raw source view (off by default)
             show_raw_source: false,
+
+            // Pending file creation (for confirm dialog)
+            pending_file_create: None,
+            pending_file_create_message: None,
         }
     }
 
@@ -1158,6 +1167,17 @@ impl App {
             return Err("Symlinks are not allowed for security reasons".to_string());
         }
 
+        // Check if file exists - if not, prompt to create it
+        if !absolute_path.exists() {
+            self.pending_file_create = Some(absolute_path.clone());
+            self.pending_file_create_message = Some(format!(
+                "File '{}' does not exist. Create it?",
+                relative_path.display()
+            ));
+            self.mode = AppMode::ConfirmFileCreate;
+            return Ok(()); // Not an error - we're asking user to confirm
+        }
+
         // Parse the new file
         let new_document = crate::parser::parse_file(&absolute_path)
             .map_err(|e| format!("Failed to load file: {}", e))?;
@@ -1211,8 +1231,8 @@ impl App {
             target.to_string(),
         ];
 
-        for candidate in candidates {
-            let path = current_dir.join(&candidate);
+        for candidate in &candidates {
+            let path = current_dir.join(candidate);
             // Check for symlinks
             if path.is_symlink() {
                 continue; // Skip symlinks for security
@@ -1222,7 +1242,16 @@ impl App {
             }
         }
 
-        Err(format!("Wikilink target '{}' not found", target))
+        // File not found - prompt to create it (default to .md extension)
+        let default_filename = format!("{}.md", target);
+        let new_path = current_dir.join(&default_filename);
+        self.pending_file_create = Some(new_path);
+        self.pending_file_create_message = Some(format!(
+            "Wikilink '[[{}]]' not found. Create '{}'?",
+            target, default_filename
+        ));
+        self.mode = AppMode::ConfirmFileCreate;
+        Ok(()) // Not an error - we're asking user to confirm
     }
 
     /// Save current state to history before navigating away
@@ -1413,6 +1442,52 @@ impl App {
         self.interactive_state.exit();
         self.mode = AppMode::Normal;
         self.status_message = None;
+    }
+
+    /// Confirm file creation and open the new file
+    pub fn confirm_file_create(&mut self) -> Result<(), String> {
+        if let Some(path) = self.pending_file_create.take() {
+            // Create parent directories if needed
+            if let Some(parent) = path.parent() {
+                if !parent.exists() {
+                    std::fs::create_dir_all(parent)
+                        .map_err(|e| format!("Failed to create directory: {}", e))?;
+                }
+            }
+
+            // Create the file with default content
+            let filename = path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("untitled");
+            let default_content = format!("# {}\n\n", filename);
+
+            std::fs::write(&path, &default_content)
+                .map_err(|e| format!("Failed to create file: {}", e))?;
+
+            // Load the new file
+            let relative_path = path
+                .file_name()
+                .map(PathBuf::from)
+                .unwrap_or_else(|| path.clone());
+
+            self.pending_file_create_message = None;
+            self.mode = AppMode::Normal;
+
+            // Load the newly created file
+            self.load_file(&relative_path, None)?;
+            self.status_message = Some(format!("✓ Created and opened {}", relative_path.display()));
+            self.exit_link_follow_mode();
+        }
+        Ok(())
+    }
+
+    /// Cancel file creation and return to previous mode
+    pub fn cancel_file_create(&mut self) {
+        self.pending_file_create = None;
+        self.pending_file_create_message = None;
+        self.mode = AppMode::Normal;
+        self.status_message = Some("File creation cancelled".to_string());
     }
 
     /// Get the currently selected interactive element

@@ -9,8 +9,14 @@ use pulldown_cmark::{
 
 /// Parse markdown content into structured blocks
 pub fn parse_content(markdown: &str, start_line: usize) -> Vec<Block> {
-    // First, extract any <details> blocks and replace them with placeholders
-    let (processed_markdown, details_blocks) = extract_details_blocks(markdown);
+    // Pre-process to convert wikilinks to standard markdown links
+    let preprocessed = preprocess_wikilinks(markdown);
+
+    // Pre-process to fix links with spaces in URLs (not valid CommonMark but common in wikis)
+    let preprocessed = preprocess_links_with_spaces(&preprocessed);
+
+    // Extract any <details> blocks and replace them with placeholders
+    let (processed_markdown, details_blocks) = extract_details_blocks(&preprocessed);
 
     // Enable GitHub Flavored Markdown extensions
     let mut options = Options::empty();
@@ -724,6 +730,53 @@ fn process_event(event: Event, state: &mut ParserState, blocks: &mut Vec<Block>)
     }
 }
 
+/// Pre-process markdown to convert wikilinks to standard markdown links
+/// Converts [[target]] to [target](wikilink:target)
+/// Converts [[target|alias]] to [alias](wikilink:target)
+fn preprocess_wikilinks(markdown: &str) -> String {
+    use regex::Regex;
+    use std::sync::OnceLock;
+
+    // Match wikilinks: [[target]] or [[target|alias]]
+    static WIKILINK: OnceLock<Regex> = OnceLock::new();
+    let re = WIKILINK.get_or_init(|| Regex::new(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]").unwrap());
+
+    re.replace_all(markdown, |caps: &regex::Captures| {
+        let target = caps.get(1).map(|m| m.as_str().trim()).unwrap_or("");
+        let alias = caps.get(2).map(|m| m.as_str().trim());
+
+        let display_text = alias.unwrap_or(target);
+        format!("[{}](wikilink:{})", display_text, target)
+    })
+    .to_string()
+}
+
+/// Pre-process markdown to convert links with spaces to angle bracket syntax
+/// CommonMark doesn't support `[text](url with spaces)` but does support `[text](<url with spaces>)`
+/// Many wikis allow spaces in URLs, so we convert them for compatibility
+fn preprocess_links_with_spaces(markdown: &str) -> String {
+    use regex::Regex;
+    use std::sync::OnceLock;
+
+    // Match markdown links: [text](url) where url contains spaces but no angle brackets
+    // We need to be careful not to match already-bracketed URLs or code blocks
+    static LINK_WITH_SPACES: OnceLock<Regex> = OnceLock::new();
+    let re =
+        LINK_WITH_SPACES.get_or_init(|| Regex::new(r"\[([^\]]+)\]\(([^)<>]+\s[^)<>]*)\)").unwrap());
+
+    re.replace_all(markdown, |caps: &regex::Captures| {
+        let text = &caps[1];
+        let url = &caps[2];
+        // Only wrap in angle brackets if URL contains spaces
+        if url.contains(' ') {
+            format!("[{}](<{}>)", text, url)
+        } else {
+            caps[0].to_string()
+        }
+    })
+    .to_string()
+}
+
 /// Generate URL-friendly slug from heading text
 pub fn slugify(text: &str) -> String {
     text.to_lowercase()
@@ -842,6 +895,60 @@ mod content_tests {
             }
         } else {
             panic!("Expected List block");
+        }
+    }
+
+    #[test]
+    fn test_wikilinks_rendered_as_links() {
+        let markdown = "Here is a [[wikilink]] and [[target|alias]] test.";
+        let blocks = parse_content(markdown, 0);
+
+        assert_eq!(blocks.len(), 1);
+        if let Block::Paragraph { inline, .. } = &blocks[0] {
+            // Find the link elements
+            let links: Vec<_> = inline
+                .iter()
+                .filter_map(|e| {
+                    if let InlineElement::Link { text, url, .. } = e {
+                        Some((text.clone(), url.clone()))
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            assert_eq!(links.len(), 2, "Should have 2 wikilinks");
+            assert_eq!(links[0].0, "wikilink");
+            assert_eq!(links[0].1, "wikilink:wikilink");
+            assert_eq!(links[1].0, "alias");
+            assert_eq!(links[1].1, "wikilink:target");
+        } else {
+            panic!("Expected Paragraph block");
+        }
+    }
+
+    #[test]
+    fn test_links_with_spaces_in_url() {
+        let markdown = "Here is a [link with spaces](path/to/my file.md) test.";
+        let blocks = parse_content(markdown, 0);
+
+        assert_eq!(blocks.len(), 1);
+        if let Block::Paragraph { inline, .. } = &blocks[0] {
+            // Find the link element
+            let link = inline.iter().find_map(|e| {
+                if let InlineElement::Link { text, url, .. } = e {
+                    Some((text.clone(), url.clone()))
+                } else {
+                    None
+                }
+            });
+
+            assert!(link.is_some(), "Should have a link");
+            let (text, url) = link.unwrap();
+            assert_eq!(text, "link with spaces");
+            assert_eq!(url, "path/to/my file.md");
+        } else {
+            panic!("Expected Paragraph block");
         }
     }
 }

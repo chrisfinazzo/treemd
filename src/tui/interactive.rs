@@ -171,7 +171,19 @@ impl InteractiveState {
                             };
 
                             // Parse link target
-                            let target = if let Some(anchor) = url.strip_prefix('#') {
+                            let target = if let Some(wikilink_target) =
+                                url.strip_prefix("wikilink:")
+                            {
+                                // Wikilink parsed from [[target]] or [[target|alias]] syntax
+                                LinkTarget::WikiLink {
+                                    target: wikilink_target.to_string(),
+                                    alias: if text != wikilink_target {
+                                        Some(text.clone())
+                                    } else {
+                                        None
+                                    },
+                                }
+                            } else if let Some(anchor) = url.strip_prefix('#') {
                                 LinkTarget::Anchor(anchor.to_string())
                             } else if url.starts_with("http://") || url.starts_with("https://") {
                                 LinkTarget::External(url.clone())
@@ -233,7 +245,19 @@ impl InteractiveState {
                                 };
 
                                 // Parse link target
-                                let target = if let Some(anchor) = url.strip_prefix('#') {
+                                let target = if let Some(wikilink_target) =
+                                    url.strip_prefix("wikilink:")
+                                {
+                                    // Wikilink parsed from [[target]] or [[target|alias]] syntax
+                                    LinkTarget::WikiLink {
+                                        target: wikilink_target.to_string(),
+                                        alias: if text != wikilink_target {
+                                            Some(text.clone())
+                                        } else {
+                                            None
+                                        },
+                                    }
+                                } else if let Some(anchor) = url.strip_prefix('#') {
                                     LinkTarget::Anchor(anchor.to_string())
                                 } else if url.starts_with("http://") || url.starts_with("https://")
                                 {

@@ -112,6 +112,20 @@ pub fn run(terminal: &mut DefaultTerminal, app: App) -> Result<()> {
                         _ => {}
                     }
                 }
+                // Handle file creation confirmation
+                else if app.mode == app::AppMode::ConfirmFileCreate {
+                    match key.code {
+                        KeyCode::Char('y') | KeyCode::Char('Y') | KeyCode::Enter => {
+                            if let Err(e) = app.confirm_file_create() {
+                                app.status_message = Some(format!("✗ Error: {}", e));
+                            }
+                        }
+                        KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
+                            app.cancel_file_create();
+                        }
+                        _ => {}
+                    }
+                }
                 // Handle interactive mode
                 else if app.mode == app::AppMode::Interactive {
                     // Check if we're in table navigation mode

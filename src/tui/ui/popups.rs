@@ -5,6 +5,7 @@
 
 use crate::tui::app::App;
 use crate::tui::help_text;
+use crate::tui::theme::Theme;
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
@@ -437,4 +438,53 @@ pub fn render_cell_edit_overlay(frame: &mut Frame, app: &App, area: Rect) {
     );
 
     frame.render_widget(paragraph, edit_area);
+}
+
+/// Render file creation confirmation dialog
+pub fn render_file_create_confirm(frame: &mut Frame, message: &str, theme: &Theme) {
+    use crate::tui::ui::util::centered_area;
+
+    // Create a centered dialog area (smaller than help/link picker)
+    let area = centered_area(frame.area(), 50, 20);
+
+    // Clear the area
+    frame.render_widget(Clear, area);
+
+    // Create the dialog content
+    let text = vec![
+        Line::from(vec![Span::styled(
+            "Create File?",
+            Style::default()
+                .fg(theme.modal_title())
+                .add_modifier(Modifier::BOLD),
+        )]),
+        Line::from(""),
+        Line::from(vec![Span::styled(
+            message,
+            Style::default().fg(theme.modal_text()),
+        )]),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("[y]", Style::default().fg(theme.modal_key_fg())),
+            Span::styled(
+                " Create file  ",
+                Style::default().fg(theme.modal_description()),
+            ),
+            Span::styled("[n/Esc]", Style::default().fg(theme.modal_key_fg())),
+            Span::styled(" Cancel", Style::default().fg(theme.modal_description())),
+        ]),
+    ];
+
+    let paragraph = Paragraph::new(text)
+        .alignment(ratatui::layout::Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(" Confirm ")
+                .title_style(Style::default().fg(theme.modal_title()))
+                .border_style(Style::default().fg(theme.modal_border()))
+                .style(Style::default().bg(theme.modal_bg())),
+        );
+
+    frame.render_widget(paragraph, area);
 }
