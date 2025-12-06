@@ -14,11 +14,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Shows entire file content including tables and text before the first heading
   - Automatically added when there's preamble content or no headings at all
 
+- **Wikilink rendering in content** - Wikilinks now render as clickable links in the content pane
+  - `[[target]]` displays as link with target as text
+  - `[[target|alias]]` displays alias text linking to target
+  - Works in both interactive mode and link follow mode
+  - Preprocessing converts wikilinks to standard markdown links for consistent parsing
+
+- **Links with spaces in URLs** - Links like `[text](path/to/my file.md)` now work correctly
+  - CommonMark doesn't support spaces in URLs, but many wikis use them
+  - Preprocessing converts to angle bracket syntax for compatibility
+
+- **File creation prompts** - Following links to non-existent files prompts to create them
+  - Confirmation dialog with `[y]` to create, `[n/Esc]` to cancel
+  - Creates file with default heading based on filename
+  - Automatically opens the newly created file
+  - Works for both relative links and wikilinks
+
+- **Page navigation in interactive mode** - Scroll content while staying in interactive mode
+  - Press `u` or `PgUp` to scroll up
+  - Press `d` or `PgDn` to scroll down
+  - Maintains element selection while scrolling
+
 ### Fixed
 
 - **Screen artifacts when scrolling** - Fixed rendering artifacts caused by tab characters in code blocks ([#26](https://github.com/Epistates/treemd/issues/26))
   - Tabs are now converted to 4 spaces in code block syntax highlighting
   - Also applies to raw markdown view for consistency
+
+- **Shift+Tab navigation** - Fixed Shift+Tab not working for backwards navigation ([#18](https://github.com/Epistates/treemd/issues/18))
+  - Now uses `KeyCode::BackTab` instead of checking modifiers
+  - Works correctly in both interactive mode and link follow mode
+
+- **Interactive mode scroll preservation** - Entering interactive mode no longer jumps to first element
+  - Now selects the element closest to current scroll position
+  - Preserves user's view when toggling interactive mode
+
+- **Wikilink anchor support** - Wikilinks now support section anchors
+  - `[[filename#section]]` loads file and jumps to heading
+  - `[[#section]]` jumps to heading in current document
+
+- **Relative file link improvements** - Better handling of wiki-style links without extensions
+  - Files without extension now try `.md` first before opening in editor
+  - Improves compatibility with Obsidian and other wiki tools
+
+### Changed
+
+- **Interactive mode status bar** - Updated to show page navigation hints
+  - Now displays: `[INTERACTIVE] Tab:Next Shift+Tab:Prev u/d:Page Esc:Exit`
+
+- **Help text updated** - Interactive mode section includes new keybindings
+  - Added `u/d` for page up/down navigation
+
+### Technical
+
+- **Wikilink preprocessing** (`src/parser/content.rs`)
+  - `preprocess_wikilinks()` converts `[[target]]` to `[target](wikilink:target)` before parsing
+  - `preprocess_links_with_spaces()` wraps URLs containing spaces in angle brackets
+  - Both use compiled regex with `OnceLock` for performance
+
+- **File creation flow** (`src/tui/app.rs`)
+  - `AppMode::ConfirmFileCreate` for pending file creation state
+  - `pending_file_create` and `pending_file_create_message` fields
+  - `confirm_file_create()` and `cancel_file_create()` methods
+
+- **Interactive mode improvements** (`src/tui/interactive.rs`)
+  - `enter_at_scroll_position()` selects element closest to scroll position
+  - Elements sorted by line position after indexing for proper navigation order
+  - Wikilinks detected via `wikilink:` URL prefix from preprocessing
+
+- **Page navigation** (`src/tui/app.rs`, `src/tui/mod.rs`)
+  - `scroll_page_down_interactive()` and `scroll_page_up_interactive()` methods
+  - Keybindings for `u`/`d`/`PgUp`/`PgDn` in interactive mode
+
+- **File creation popup** (`src/tui/ui/popups.rs`)
+  - `render_file_create_confirm()` renders themed confirmation dialog
 
 ## [0.4.4] - 2025-12-04
 
