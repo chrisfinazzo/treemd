@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.8] - 2025-12-07
+## [0.4.7] - 2025-12-07
 
 ### Added
 
@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Status bar shows match count and current position
 
 ### Fixed
+
+- **File creation modal not appearing** - Fixed issue where following links to non-existent files would say "file opened" but not show the creation prompt
+  - `exit_interactive_mode()` and `exit_link_follow_mode()` were overwriting the `ConfirmFileCreate` mode
+  - Now checks if file creation is pending before resetting mode
+
+- **Double `.md` extension on wikilinks** - Fixed wikilinks like `[[file.md]]` creating `file.md.md`
+  - Now detects if wikilink target already has a markdown extension
+  - Only adds `.md` if not already present
 
 - **Anchor links in interactive mode** - Following anchor links to headings in current file now works correctly ([#29](https://github.com/Epistates/treemd/issues/29))
   - Changed from `select_by_text()` to `jump_to_anchor()` for proper anchor handling
@@ -61,18 +69,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Config tracking** (`src/tui/app.rs`)
   - `config_has_custom_outline_width` flag to detect power user configs
   - Standard widths: 20%, 30%, 40% - anything else is custom
-
-## [0.4.7] - 2025-12-05
-
-### Fixed
-
-- **File creation modal not appearing** - Fixed issue where following links to non-existent files would say "file opened" but not show the creation prompt
-  - `exit_interactive_mode()` and `exit_link_follow_mode()` were overwriting the `ConfirmFileCreate` mode
-  - Now checks if file creation is pending before resetting mode
-
-- **Double `.md` extension on wikilinks** - Fixed wikilinks like `[[file.md]]` creating `file.md.md`
-  - Now detects if wikilink target already has a markdown extension
-  - Only adds `.md` if not already present
 
 ## [0.4.6] - 2025-12-04
 
