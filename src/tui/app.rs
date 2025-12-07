@@ -229,8 +229,10 @@ pub struct App {
 
     // Link following state
     pub mode: AppMode,
-    pub current_file_path: PathBuf, // Path to current file for resolving relative links
-    pub links_in_view: Vec<Link>,   // Links in currently displayed content
+    pub current_file_path: PathBuf,  // Path to current file for resolving relative links
+    pub file_path_changed: bool,     // Flag to signal file watcher needs update
+    pub suppress_file_watch: bool,   // Skip next file watch check (after internal save)
+    pub links_in_view: Vec<Link>,    // Links in currently displayed content
     pub filtered_link_indices: Vec<usize>, // Indices into links_in_view after filtering
     pub selected_link_idx: Option<usize>, // Currently selected index in filtered list
     pub link_search_query: String,  // Search query for filtering links
@@ -270,7 +272,8 @@ pub struct App {
     pub doc_search_query: String,
     pub doc_search_matches: Vec<SearchMatch>,
     pub doc_search_current_idx: Option<usize>,
-    pub doc_search_active: bool, // Whether search input is active
+    pub doc_search_active: bool,        // Whether search input is active
+    pub doc_search_from_interactive: bool, // Whether search was started from interactive mode
 
     // Command palette state
     pub command_query: String,
@@ -374,6 +377,8 @@ impl App {
             // Link following state
             mode: AppMode::Normal,
             current_file_path: file_path,
+            file_path_changed: false,
+            suppress_file_watch: false,
             links_in_view: Vec::new(),
             filtered_link_indices: Vec::new(),
             selected_link_idx: None,
@@ -414,6 +419,7 @@ impl App {
             doc_search_matches: Vec::new(),
             doc_search_current_idx: None,
             doc_search_active: false,
+            doc_search_from_interactive: false,
 
             // Command palette state
             command_query: String::new(),
@@ -753,8 +759,10 @@ impl App {
 
     // ========== Document Search Methods ==========
 
-    /// Enter document search mode (activated by / when content is focused)
+    /// Enter document search mode (activated by / when content is focused or in interactive mode)
     pub fn enter_doc_search(&mut self) {
+        // Remember if we came from interactive mode to restore it later
+        self.doc_search_from_interactive = self.mode == AppMode::Interactive;
         self.mode = AppMode::DocSearch;
         self.doc_search_active = true;
         self.doc_search_query.clear();
@@ -858,18 +866,30 @@ impl App {
         }
     }
 
-    /// Cancel search and return to normal mode
+    /// Cancel search and return to previous mode (interactive or normal)
     pub fn cancel_doc_search(&mut self) {
-        self.mode = AppMode::Normal;
+        // Restore interactive mode if that's where we came from
+        if self.doc_search_from_interactive {
+            self.mode = AppMode::Interactive;
+        } else {
+            self.mode = AppMode::Normal;
+        }
         self.doc_search_active = false;
+        self.doc_search_from_interactive = false;
         self.doc_search_query.clear();
         self.doc_search_matches.clear();
         self.doc_search_current_idx = None;
     }
 
-    /// Clear search highlighting and return to normal mode
+    /// Clear search highlighting and return to previous mode (interactive or normal)
     pub fn clear_doc_search(&mut self) {
-        self.mode = AppMode::Normal;
+        // Restore interactive mode if that's where we came from
+        if self.doc_search_from_interactive {
+            self.mode = AppMode::Interactive;
+        } else {
+            self.mode = AppMode::Normal;
+        }
+        self.doc_search_from_interactive = false;
         self.doc_search_query.clear();
         self.doc_search_matches.clear();
         self.doc_search_current_idx = None;
@@ -1353,6 +1373,11 @@ impl App {
             .selected()
             .and_then(|i| self.outline_items.get(i))
             .map(|item| item.text.as_str())
+    }
+
+    /// Sync previous_selection to current selection (prevents spurious scroll resets)
+    pub fn sync_previous_selection(&mut self) {
+        self.previous_selection = self.selected_heading_text().map(|s| s.to_string());
     }
 
     pub fn toggle_theme_picker(&mut self) {
@@ -1984,6 +2009,11 @@ impl App {
 
     /// Load a new document and update all related state
     fn load_document(&mut self, document: Document, filename: String, path: PathBuf) {
+        // Signal file watcher if path changed
+        if self.current_file_path != path {
+            self.file_path_changed = true;
+        }
+
         self.document = document;
         self.filename = filename;
         self.current_file_path = path;
@@ -2267,7 +2297,7 @@ impl App {
     }
 
     /// Re-index interactive elements after state changes
-    fn reindex_interactive_elements(&mut self) {
+    pub fn reindex_interactive_elements(&mut self) {
         let content = if let Some(selected) = self.selected_heading_text() {
             self.document
                 .extract_section(selected)
@@ -2364,6 +2394,15 @@ impl App {
                 self.interactive_state.current_index = Some(idx);
             }
         }
+
+        // IMPORTANT: Sync previous_selection to prevent update_content_metrics() from resetting scroll
+        // After reload, load_document() sets previous_selection = None, but current selection is restored.
+        // Without this sync, update_content_metrics() thinks selection changed and resets scroll to 0.
+        self.previous_selection = self.selected_heading_text().map(|s| s.to_string());
+
+        // Suppress file watcher for this save - we already reloaded internally
+        // Without this, file watcher detects our save and triggers a second reload
+        self.suppress_file_watch = true;
 
         let new_state = if checked { "unchecked" } else { "checked" };
         self.status_message = Some(format!("✓ Checkbox {} and saved", new_state));
