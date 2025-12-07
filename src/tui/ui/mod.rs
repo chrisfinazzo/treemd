@@ -8,8 +8,8 @@ use layout::{DynamicLayout, Section};
 use crate::tui::app::{App, AppMode, Focus};
 use crate::tui::theme::Theme;
 use popups::{
-    render_cell_edit_overlay, render_file_create_confirm, render_help_popup, render_link_picker,
-    render_theme_picker,
+    render_cell_edit_overlay, render_command_palette, render_file_create_confirm, render_help_popup,
+    render_link_picker, render_save_width_confirm, render_theme_picker,
 };
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -98,6 +98,16 @@ pub fn render(frame: &mut Frame, app: &mut App) {
         if let Some(message) = &app.pending_file_create_message {
             render_file_create_confirm(frame, message, &app.theme);
         }
+    }
+
+    // Render save width confirmation dialog
+    if matches!(app.mode, AppMode::ConfirmSaveWidth) {
+        render_save_width_confirm(frame, app.outline_width, &app.theme);
+    }
+
+    // Render command palette
+    if matches!(app.mode, AppMode::CommandPalette) {
+        render_command_palette(frame, app, &app.theme);
     }
 }
 
