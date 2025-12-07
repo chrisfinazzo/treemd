@@ -110,8 +110,9 @@ pub const HELP_LINES: &[HelpLine] = &[
     // General
     section("General"),
     keybinding("Tab", "Switch between Outline and Content"),
-    keybinding("/", "Search (outline=filter | content=search document)"),
-    keybinding("n/N", "Next/previous search match (in document search)"),
+    keybinding("/", "Search document content (Esc: clear, n/N: navigate)"),
+    keybinding("s", "Filter outline headings (Esc: clear, Enter: keep)"),
+    keybinding("n/N", "Next/previous search match"),
     keybinding("r", "Toggle raw source view"),
     keybinding("?", "Toggle this help"),
     keybinding("q/Esc", "Quit"),
