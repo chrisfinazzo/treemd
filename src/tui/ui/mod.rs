@@ -360,6 +360,7 @@ fn render_content(frame: &mut Frame, app: &App, area: Rect) {
             &app.doc_search_query,
             app.doc_search_current_idx,
             app.doc_search_matches.len(),
+            theme,
         );
     }
 
@@ -986,6 +987,7 @@ fn apply_search_highlighting(
     query: &str,
     current_match_idx: Option<usize>,
     total_matches: usize,
+    theme: &Theme,
 ) -> Text<'static> {
     if query.is_empty() {
         return text;
@@ -1036,16 +1038,11 @@ fn apply_search_highlighting(
                     new_spans.push(Span::raw(full_text[pos..start].to_string()));
                 }
 
-                // Add highlighted text
+                // Add highlighted text - use theme colors
                 let highlight_style = if is_current {
-                    Style::default()
-                        .bg(Color::Yellow)
-                        .fg(Color::Black)
-                        .add_modifier(Modifier::BOLD)
+                    theme.search_current_style()
                 } else {
-                    Style::default()
-                        .bg(Color::Rgb(100, 100, 0))
-                        .fg(Color::White)
+                    theme.search_match_style()
                 };
                 new_spans.push(Span::styled(full_text[start..end].to_string(), highlight_style));
 

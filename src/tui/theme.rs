@@ -45,6 +45,11 @@ pub struct Theme {
     pub link_selected_bg: Color,
     pub link_selected_fg: Color,
     pub table_border: Color,
+    // Search highlighting
+    pub search_match_bg: Color,
+    pub search_match_fg: Color,
+    pub search_current_bg: Color,
+    pub search_current_fg: Color,
 }
 
 impl Theme {
@@ -107,6 +112,10 @@ impl Theme {
             link_selected_bg: Color::Rgb(100, 200, 255),
             link_selected_fg: Color::Rgb(43, 48, 59),
             table_border: Color::Rgb(100, 100, 120),
+            search_match_bg: Color::Rgb(100, 100, 50),
+            search_match_fg: Color::White,
+            search_current_bg: Color::Yellow,
+            search_current_fg: Color::Black,
         }
     }
 
@@ -143,6 +152,10 @@ impl Theme {
             link_selected_bg: Color::Rgb(136, 192, 208),
             link_selected_fg: Color::Rgb(46, 52, 64),
             table_border: Color::Rgb(76, 86, 106),
+            search_match_bg: Color::Rgb(163, 140, 100),
+            search_match_fg: Color::Rgb(46, 52, 64),
+            search_current_bg: Color::Rgb(235, 203, 139),
+            search_current_fg: Color::Rgb(46, 52, 64),
         }
     }
 
@@ -179,6 +192,10 @@ impl Theme {
             link_selected_bg: Color::Rgb(139, 233, 253),
             link_selected_fg: Color::Rgb(40, 42, 54),
             table_border: Color::Rgb(98, 114, 164),
+            search_match_bg: Color::Rgb(180, 160, 80),
+            search_match_fg: Color::Rgb(40, 42, 54),
+            search_current_bg: Color::Rgb(241, 250, 140),
+            search_current_fg: Color::Rgb(40, 42, 54),
         }
     }
 
@@ -215,6 +232,10 @@ impl Theme {
             link_selected_bg: Color::Rgb(38, 139, 210),
             link_selected_fg: Color::Rgb(0, 43, 54),
             table_border: Color::Rgb(88, 110, 117),
+            search_match_bg: Color::Rgb(133, 110, 50),
+            search_match_fg: Color::Rgb(253, 246, 227),
+            search_current_bg: Color::Rgb(181, 137, 0),
+            search_current_fg: Color::Rgb(0, 43, 54),
         }
     }
 
@@ -251,6 +272,10 @@ impl Theme {
             link_selected_bg: Color::Rgb(102, 217, 239),
             link_selected_fg: Color::Rgb(39, 40, 34),
             table_border: Color::Rgb(117, 113, 94),
+            search_match_bg: Color::Rgb(180, 140, 60),
+            search_match_fg: Color::Rgb(39, 40, 34),
+            search_current_bg: Color::Rgb(230, 219, 116),
+            search_current_fg: Color::Rgb(39, 40, 34),
         }
     }
 
@@ -287,6 +312,10 @@ impl Theme {
             link_selected_bg: Color::Rgb(131, 165, 152),
             link_selected_fg: Color::Rgb(40, 40, 40),
             table_border: Color::Rgb(146, 131, 116),
+            search_match_bg: Color::Rgb(180, 140, 50),
+            search_match_fg: Color::Rgb(40, 40, 40),
+            search_current_bg: Color::Rgb(250, 189, 47),
+            search_current_fg: Color::Rgb(40, 40, 40),
         }
     }
 
@@ -323,6 +352,10 @@ impl Theme {
             link_selected_bg: Color::Rgb(122, 162, 247),
             link_selected_fg: Color::Rgb(26, 27, 38),
             table_border: Color::Rgb(86, 95, 137),
+            search_match_bg: Color::Rgb(180, 150, 80),
+            search_match_fg: Color::Rgb(26, 27, 38),
+            search_current_bg: Color::Rgb(224, 175, 104),
+            search_current_fg: Color::Rgb(26, 27, 38),
         }
     }
 
@@ -359,6 +392,10 @@ impl Theme {
             link_selected_bg: Color::Rgb(137, 180, 250),  // Blue
             link_selected_fg: Color::Rgb(30, 30, 46),     // Base
             table_border: Color::Rgb(108, 112, 134),      // Overlay 0
+            search_match_bg: Color::Rgb(180, 140, 80),    // Warm yellow-orange
+            search_match_fg: Color::Rgb(30, 30, 46),      // Base
+            search_current_bg: Color::Rgb(249, 226, 175), // Yellow
+            search_current_fg: Color::Rgb(30, 30, 46),    // Base
         }
     }
 
@@ -397,6 +434,10 @@ impl Theme {
             link_selected_bg: Color::Indexed(117),
             link_selected_fg: Color::Indexed(236),
             table_border: Color::Indexed(241),
+            search_match_bg: Color::Indexed(136),  // Dark yellow
+            search_match_fg: Color::White,
+            search_current_bg: Color::Yellow,
+            search_current_fg: Color::Black,
         }
     }
 
@@ -433,6 +474,10 @@ impl Theme {
             link_selected_bg: Color::Indexed(109),
             link_selected_fg: Color::Indexed(236),
             table_border: Color::Indexed(240),
+            search_match_bg: Color::Indexed(136),
+            search_match_fg: Color::Indexed(236),
+            search_current_bg: Color::Indexed(222),
+            search_current_fg: Color::Indexed(236),
         }
     }
 
@@ -469,6 +514,10 @@ impl Theme {
             link_selected_bg: Color::Indexed(117),
             link_selected_fg: Color::Indexed(236),
             table_border: Color::Indexed(61),
+            search_match_bg: Color::Indexed(136),
+            search_match_fg: Color::Indexed(236),
+            search_current_bg: Color::Indexed(228),
+            search_current_fg: Color::Indexed(236),
         }
     }
 
@@ -505,6 +554,10 @@ impl Theme {
             link_selected_bg: Color::Indexed(33),
             link_selected_fg: Color::Indexed(234),
             table_border: Color::Indexed(240),
+            search_match_bg: Color::Indexed(136),
+            search_match_fg: Color::Indexed(230),
+            search_current_bg: Color::Indexed(136),
+            search_current_fg: Color::Indexed(234),
         }
     }
 
@@ -541,6 +594,10 @@ impl Theme {
             link_selected_bg: Color::Indexed(81),
             link_selected_fg: Color::Indexed(235),
             table_border: Color::Indexed(241),
+            search_match_bg: Color::Indexed(136),
+            search_match_fg: Color::Indexed(235),
+            search_current_bg: Color::Indexed(228),
+            search_current_fg: Color::Indexed(235),
         }
     }
 
@@ -577,6 +634,11 @@ impl Theme {
             link_selected_bg: Color::Indexed(108),
             link_selected_fg: Color::Indexed(235),
             table_border: Color::Indexed(243),
+            // Search highlighting
+            search_match_bg: Color::Indexed(136),  // Yellow-orange
+            search_match_fg: Color::Indexed(235),
+            search_current_bg: Color::Indexed(214), // Bright orange
+            search_current_fg: Color::Indexed(235),
         }
     }
 
@@ -613,6 +675,11 @@ impl Theme {
             link_selected_bg: Color::Indexed(110),
             link_selected_fg: Color::Indexed(234),
             table_border: Color::Indexed(243),
+            // Search highlighting
+            search_match_bg: Color::Indexed(136),  // Yellow
+            search_match_fg: Color::Indexed(234),
+            search_current_bg: Color::Indexed(215), // Orange
+            search_current_fg: Color::Indexed(234),
         }
     }
 
@@ -649,6 +716,11 @@ impl Theme {
             link_selected_bg: Color::Indexed(117),
             link_selected_fg: Color::Indexed(235),
             table_border: Color::Indexed(242),
+            // Search highlighting
+            search_match_bg: Color::Indexed(136),  // Yellow
+            search_match_fg: Color::Indexed(235),
+            search_current_bg: Color::Indexed(223), // Peach/Yellow
+            search_current_fg: Color::Indexed(235),
         }
     }
 
@@ -726,6 +798,21 @@ impl Theme {
         self.border_focused
     }
 
+    /// Style for search matches (non-current)
+    pub fn search_match_style(&self) -> Style {
+        Style::default()
+            .bg(self.search_match_bg)
+            .fg(self.search_match_fg)
+    }
+
+    /// Style for the current/focused search match
+    pub fn search_current_style(&self) -> Style {
+        Style::default()
+            .bg(self.search_current_bg)
+            .fg(self.search_current_fg)
+            .add_modifier(Modifier::BOLD)
+    }
+
     pub fn modal_text(&self) -> Color {
         self.foreground
     }
@@ -797,6 +884,11 @@ impl Theme {
         apply_color!(link_selected_bg);
         apply_color!(link_selected_fg);
         apply_color!(table_border);
+        // Search highlighting
+        apply_color!(search_match_bg);
+        apply_color!(search_match_fg);
+        apply_color!(search_current_bg);
+        apply_color!(search_current_fg);
 
         self
     }

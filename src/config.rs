@@ -95,6 +95,15 @@ pub struct CustomThemeConfig {
     pub link_selected_fg: Option<ColorValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub table_border: Option<ColorValue>,
+    // Search highlighting
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub search_match_bg: Option<ColorValue>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub search_match_fg: Option<ColorValue>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub search_current_bg: Option<ColorValue>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub search_current_fg: Option<ColorValue>,
 }
 
 /// Color value that can be specified in multiple formats

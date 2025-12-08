@@ -26,7 +26,7 @@ A markdown navigator with tree-based structural navigation. Like `tree`, but int
 - **Navigation history** - Back/forward between files with full state preservation
 - **Syntax highlighting** - 50+ languages with full syntect integration
 - **Vim-style navigation** - `j`/`k`, `g`/`G`, `d`/`u`, `p` (parent) for efficient browsing
-- **Search & filter** - Press `/` to filter headings in real-time
+- **Search & filter** - Press `/` to filter headings or search document content with `n/N` navigation
 - **Collapsible tree** - Expand/collapse sections with `Space`/`Enter`
 - **Bookmarks** - Mark positions (`m`) and jump back (`'`)
 - **Adjustable layout** - Toggle outline visibility, resize panes
@@ -149,7 +149,8 @@ treemd README.md
 - `Y` - Copy anchor link to clipboard
 
 *Search & Help:*
-- `/` - Search/filter headings (type to filter, `Esc` to clear)
+- `/` - Search (in outline: filter headings; in content: search text)
+- `n/N` - Next/previous search match (in content search)
 - `?` - Toggle help overlay
 - `q/Esc` - Quit
 
@@ -163,7 +164,7 @@ treemd README.md
 - **External URL opening** - Opens links in default browser automatically
 - **Syntax-highlighted code blocks** - 50+ languages supported
 - **Inline formatting** - Bold, italic, inline code with colors
-- **Real-time search** - Filter headings as you type (press `/`)
+- **Real-time search** - Filter headings or search content with highlighted matches (press `/`)
 - **Toggle outline** - Hide for full-width reading (press `w`)
 - **Adjustable layout** - Resize outline 20%/30%/40% (press `[` `]`)
 - **Quick navigation** - Jump to any heading 1-9 instantly, parent with `p`
@@ -495,6 +496,12 @@ list_bullet = "Cyan"
 # Blockquotes
 blockquote_border = { rgb = [100, 100, 120] }
 blockquote_fg = { rgb = [150, 150, 170] }
+
+# Search highlighting
+search_match_bg = { rgb = [100, 100, 50] }    # Background for search matches
+search_match_fg = "White"                      # Text color for search matches
+search_current_bg = "Yellow"                   # Current/focused match background
+search_current_fg = "Black"                    # Current/focused match text
 ```
 
 #### Example: Dark Blue Custom Theme
