@@ -26,9 +26,12 @@ path = "src/main.rs"
 clap = { version = "4.5", features = ["derive"] }
 clap_complete = { version = "4.5", features = ["unstable-dynamic"] }
 
-# Markdown parsing
-pulldown-cmark = "0.13"
+# Markdown parsing - fully delegated to turbovault-parser for OFM support
 unicode-width = "0.2"
+
+# Turbovault integration (local path for development, will be versioned for release)
+turbovault-parser = { path = "../turbovault/crates/turbovault-parser" }
+turbovault-core = { path = "../turbovault/crates/turbovault-core" }
 
 # Tree data structure for heading hierarchy
 indextree = "4.7"

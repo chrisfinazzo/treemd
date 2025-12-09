@@ -3,9 +3,12 @@
 //! This module provides functionality to extract and parse various types of links
 //! from markdown documents, including relative file links, anchor links, wikilinks,
 //! and external URLs.
+//!
+//! All parsing is delegated to `turbovault-parser` for unified, code-block-aware
+//! link extraction.
 
-use pulldown_cmark::{Event, Parser, Tag, TagEnd};
 use std::path::PathBuf;
+use turbovault_core::LinkType;
 
 /// Represents a link found in markdown content.
 #[derive(Debug, Clone, PartialEq)]
@@ -77,10 +80,15 @@ impl Link {
 
 /// Extract all links from markdown content.
 ///
-/// This function parses the markdown and identifies all link types:
+/// This function uses turbovault-parser to extract all link types with
+/// proper code-block awareness. Links inside fenced code blocks or
+/// inline code are correctly excluded.
+///
+/// Supported link types:
 /// - Standard markdown links: `[text](url)`
 /// - Wikilinks: `[[target]]` or `[[target|alias]]`
-/// - Autolinks: `<https://example.com>`
+/// - Anchor links: `[text](#section)`
+/// - External links: `[text](https://...)`
 ///
 /// # Arguments
 ///
@@ -92,123 +100,72 @@ impl Link {
 pub fn extract_links(content: &str) -> Vec<Link> {
     let mut links = Vec::new();
 
-    // First pass: extract standard markdown links
-    let parser = Parser::new(content).into_offset_iter();
-    let mut in_link = false;
-    let mut link_text = String::new();
-    let mut link_url = String::new();
-    let mut link_offset = 0;
+    // Extract standard markdown links via turbovault-parser
+    for md_link in turbovault_parser::parse_markdown_links(content) {
+        let text = md_link
+            .display_text
+            .clone()
+            .unwrap_or_else(|| md_link.target.clone());
+        let target = convert_link_type(&md_link.type_, &md_link.target);
 
-    for (event, range) in parser {
-        match event {
-            Event::Start(Tag::Link { dest_url, .. }) => {
-                in_link = true;
-                link_url = dest_url.to_string();
-                link_offset = range.start;
-            }
-            Event::Text(text) if in_link => {
-                link_text.push_str(&text);
-            }
-            Event::End(TagEnd::Link) => {
-                if in_link {
-                    let target = parse_link_target(&link_url);
-                    links.push(Link::new(link_text.clone(), target, link_offset));
-                    link_text.clear();
-                    link_url.clear();
-                    in_link = false;
-                }
-            }
-            _ => {}
-        }
+        links.push(Link::new(text, target, md_link.position.offset));
     }
 
-    // Second pass: extract wikilinks (not parsed by pulldown-cmark)
-    extract_wikilinks(content, &mut links);
+    // Extract wikilinks via turbovault-parser
+    for wikilink in turbovault_parser::parse_wikilinks(content) {
+        let target = wikilink.target.clone();
+        let alias = wikilink.display_text.clone();
+        let display_text = alias.clone().unwrap_or_else(|| target.clone());
+
+        links.push(Link::new(
+            display_text,
+            LinkTarget::WikiLink { target, alias },
+            wikilink.position.offset,
+        ));
+    }
+
+    // Sort by offset for consistent ordering
+    links.sort_by_key(|l| l.offset);
 
     links
 }
 
-/// Parse a link URL into a LinkTarget.
-fn parse_link_target(url: &str) -> LinkTarget {
-    if let Some(anchor) = url.strip_prefix('#') {
-        // Anchor link within current document
-        LinkTarget::Anchor(anchor.to_string())
-    } else if url.starts_with("http://") || url.starts_with("https://") {
-        // External URL
-        LinkTarget::External(url.to_string())
-    } else {
-        // Relative file path, possibly with anchor
-        if let Some((path, anchor)) = url.split_once('#') {
-            LinkTarget::RelativeFile {
-                path: PathBuf::from(path),
-                anchor: Some(anchor.to_string()),
+/// Convert turbovault LinkType to treemd LinkTarget.
+fn convert_link_type(link_type: &LinkType, target: &str) -> LinkTarget {
+    match link_type {
+        LinkType::Anchor => {
+            // Pure anchor: #section
+            let anchor = target.strip_prefix('#').unwrap_or(target);
+            LinkTarget::Anchor(anchor.to_string())
+        }
+        LinkType::ExternalLink => LinkTarget::External(target.to_string()),
+        LinkType::HeadingRef => {
+            // File with anchor: file.md#section
+            if let Some((path, anchor)) = target.split_once('#') {
+                LinkTarget::RelativeFile {
+                    path: PathBuf::from(path),
+                    anchor: Some(anchor.to_string()),
+                }
+            } else {
+                // Shouldn't happen for HeadingRef, but handle gracefully
+                LinkTarget::RelativeFile {
+                    path: PathBuf::from(target),
+                    anchor: None,
+                }
             }
-        } else {
+        }
+        LinkType::MarkdownLink => {
+            // Relative file without anchor
             LinkTarget::RelativeFile {
-                path: PathBuf::from(url),
+                path: PathBuf::from(target),
                 anchor: None,
             }
         }
-    }
-}
-
-/// Extract wikilinks from content.
-///
-/// Wikilinks have the format:
-/// - `[[target]]` - simple wikilink
-/// - `[[target|alias]]` - wikilink with custom display text
-fn extract_wikilinks(content: &str, links: &mut Vec<Link>) {
-    let mut chars = content.char_indices().peekable();
-
-    while let Some((i, c)) = chars.next() {
-        if c == '[' {
-            // Check if this is the start of a wikilink [[
-            if let Some(&(_, next_c)) = chars.peek() {
-                if next_c == '[' {
-                    chars.next(); // consume second '['
-
-                    // Find the closing ]]
-                    let mut wikilink_content = String::new();
-                    let mut found_closing = false;
-                    let offset = i;
-
-                    while let Some((_, c)) = chars.next() {
-                        if c == ']' {
-                            if let Some(&(_, next_c)) = chars.peek() {
-                                if next_c == ']' {
-                                    chars.next(); // consume second ']'
-                                    found_closing = true;
-                                    break;
-                                }
-                            }
-                        }
-                        wikilink_content.push(c);
-                    }
-
-                    if found_closing && !wikilink_content.is_empty() {
-                        // Parse the wikilink content
-                        let (target, alias, display_text) =
-                            if let Some((target, alias)) = wikilink_content.split_once('|') {
-                                (
-                                    target.trim().to_string(),
-                                    Some(alias.trim().to_string()),
-                                    alias.trim().to_string(),
-                                )
-                            } else {
-                                (
-                                    wikilink_content.trim().to_string(),
-                                    None,
-                                    wikilink_content.trim().to_string(),
-                                )
-                            };
-
-                        links.push(Link::new(
-                            display_text,
-                            LinkTarget::WikiLink { target, alias },
-                            offset,
-                        ));
-                    }
-                }
+        LinkType::WikiLink | LinkType::Embed | LinkType::BlockRef => {
+            // These shouldn't come through parse_markdown_links, but handle anyway
+            LinkTarget::WikiLink {
+                target: target.to_string(),
+                alias: None,
             }
         }
     }
@@ -321,19 +278,18 @@ Visit [GitHub](https://github.com/user/repo) for source.
 
         assert_eq!(links.len(), 4);
 
-        // Standard markdown links come first (in order)
+        // Links should be sorted by offset
         assert_eq!(links[0].text, "Installation");
         assert!(matches!(links[0].target, LinkTarget::Anchor(_)));
 
         assert_eq!(links[1].text, "API docs");
         assert!(matches!(links[1].target, LinkTarget::RelativeFile { .. }));
 
-        assert_eq!(links[2].text, "GitHub");
-        assert!(matches!(links[2].target, LinkTarget::External(_)));
+        assert_eq!(links[2].text, "contributing");
+        assert!(matches!(links[2].target, LinkTarget::WikiLink { .. }));
 
-        // Wikilinks come after (extracted in second pass)
-        assert_eq!(links[3].text, "contributing");
-        assert!(matches!(links[3].target, LinkTarget::WikiLink { .. }));
+        assert_eq!(links[3].text, "GitHub");
+        assert!(matches!(links[3].target, LinkTarget::External(_)));
     }
 
     #[test]
@@ -355,5 +311,119 @@ Visit [GitHub](https://github.com/user/repo) for source.
         let md = "This has [[incomplete wikilink";
         let links = extract_links(md);
         assert_eq!(links.len(), 0); // Should not extract malformed links
+    }
+
+    #[test]
+    fn test_wikilinks_excluded_from_code_blocks() {
+        // Wikilinks inside code blocks should NOT be extracted
+        let md = r#"
+# Test Document
+
+[[Valid Link]] outside code block.
+
+```rust
+let x = "[[Fake Inside Code]]";
+```
+
+[[Another Valid]] after code block.
+"#;
+        let links = extract_links(md);
+
+        // Should only find the 2 valid wikilinks, NOT the one inside the code block
+        let wikilink_count = links
+            .iter()
+            .filter(|l| matches!(l.target, LinkTarget::WikiLink { .. }))
+            .count();
+
+        assert_eq!(
+            wikilink_count, 2,
+            "Should find exactly 2 wikilinks (not the one in code block)"
+        );
+
+        // Verify the correct wikilinks were found
+        let wikilink_targets: Vec<_> = links
+            .iter()
+            .filter_map(|l| match &l.target {
+                LinkTarget::WikiLink { target, .. } => Some(target.as_str()),
+                _ => None,
+            })
+            .collect();
+
+        assert!(wikilink_targets.contains(&"Valid Link"));
+        assert!(wikilink_targets.contains(&"Another Valid"));
+        assert!(!wikilink_targets.contains(&"Fake Inside Code"));
+    }
+
+    #[test]
+    fn test_wikilinks_excluded_from_inline_code() {
+        // Wikilinks inside inline code should also be excluded
+        let md = "This is `[[not a link]]` but [[this is]] a link.";
+        let links = extract_links(md);
+
+        let wikilink_count = links
+            .iter()
+            .filter(|l| matches!(l.target, LinkTarget::WikiLink { .. }))
+            .count();
+
+        assert_eq!(
+            wikilink_count, 1,
+            "Should find exactly 1 wikilink (not the one in inline code)"
+        );
+    }
+
+    #[test]
+    fn test_markdown_links_excluded_from_code_blocks() {
+        // Standard markdown links inside code blocks should also be excluded
+        let md = r#"
+[Valid](https://example.com) outside.
+
+```markdown
+[Fake](https://fake.com) inside code
+```
+
+[Also Valid](./file.md) after.
+"#;
+        let links = extract_links(md);
+
+        // Should only find 2 links, not the one in code block
+        assert_eq!(links.len(), 2);
+        assert!(matches!(links[0].target, LinkTarget::External(_)));
+        assert!(matches!(links[1].target, LinkTarget::RelativeFile { .. }));
+    }
+
+    #[test]
+    fn test_link_types_correctly_classified() {
+        let md = r#"
+[anchor](#section)
+[external](https://example.com)
+[file](./docs/api.md)
+[file with anchor](./docs/api.md#usage)
+[[wikilink]]
+"#;
+        let links = extract_links(md);
+
+        assert_eq!(links.len(), 5);
+
+        // Verify each link type is correctly classified
+        assert!(
+            matches!(&links[0].target, LinkTarget::Anchor(a) if a == "section"),
+            "Expected Anchor"
+        );
+        assert!(
+            matches!(&links[1].target, LinkTarget::External(u) if u == "https://example.com"),
+            "Expected External"
+        );
+        assert!(
+            matches!(&links[2].target, LinkTarget::RelativeFile { path, anchor: None } if path == &PathBuf::from("./docs/api.md")),
+            "Expected RelativeFile without anchor"
+        );
+        assert!(
+            matches!(&links[3].target, LinkTarget::RelativeFile { path, anchor: Some(a) } if path == &PathBuf::from("./docs/api.md") && a == "usage"),
+            "Expected RelativeFile with anchor"
+        );
+        assert!(
+            matches!(&links[4].target, LinkTarget::WikiLink { target, .. } if target == "wikilink"),
+            "Expected WikiLink"
+        );
     }
 }

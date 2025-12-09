@@ -1,6 +1,19 @@
 //! JSON output types for nested, markdown-intelligent structure
+//!
+//! Block-level content types are re-exported from turbovault-core for
+//! unified parsing with OFM (Obsidian Flavored Markdown) support and
+//! proper code block awareness.
 
 use serde::{Deserialize, Serialize};
+
+// Re-export content block types from turbovault-core
+// These provide code-block-aware parsing and OFM support
+pub use turbovault_core::{
+    ContentBlock as Block,
+    InlineElement,
+    ListItem,
+    TableAlignment as Alignment,
+};
 
 /// Root document structure with metadata and nested sections
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -58,106 +71,4 @@ pub struct Content {
     pub raw: String,
     /// Parsed content blocks
     pub blocks: Vec<Block>,
-}
-
-/// Content block types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "lowercase")]
-pub enum Block {
-    /// Sub-heading within a section
-    Heading {
-        level: usize,
-        content: String,
-        inline: Vec<InlineElement>,
-    },
-    Paragraph {
-        content: String,
-        inline: Vec<InlineElement>,
-    },
-    Code {
-        language: Option<String>,
-        content: String,
-        #[serde(rename = "startLine")]
-        start_line: usize,
-        #[serde(rename = "endLine")]
-        end_line: usize,
-    },
-    List {
-        ordered: bool,
-        items: Vec<ListItem>,
-    },
-    Blockquote {
-        content: String,
-        blocks: Vec<Block>,
-    },
-    Table {
-        headers: Vec<String>,
-        alignments: Vec<Alignment>,
-        rows: Vec<Vec<String>>,
-    },
-    Image {
-        alt: String,
-        src: String,
-        title: Option<String>,
-    },
-    #[serde(rename = "horizontal_rule")]
-    HorizontalRule,
-    Details {
-        summary: String,
-        content: String,
-        blocks: Vec<Block>,
-    },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ListItem {
-    /// For task lists: true/false/null
-    pub checked: Option<bool>,
-    /// Raw content
-    pub content: String,
-    /// Parsed inline elements
-    pub inline: Vec<InlineElement>,
-    /// Nested blocks (e.g., code blocks inside list items)
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub blocks: Vec<Block>,
-}
-
-/// Inline formatting elements
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "type", rename_all = "lowercase")]
-pub enum InlineElement {
-    Text {
-        value: String,
-    },
-    Strong {
-        value: String,
-    },
-    Emphasis {
-        value: String,
-    },
-    Code {
-        value: String,
-    },
-    Link {
-        text: String,
-        url: String,
-        title: Option<String>,
-    },
-    Image {
-        alt: String,
-        src: String,
-        title: Option<String>,
-    },
-    Strikethrough {
-        value: String,
-    },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Alignment {
-    Left,
-    Center,
-    Right,
-    None,
 }

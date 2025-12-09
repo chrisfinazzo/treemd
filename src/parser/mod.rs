@@ -2,6 +2,9 @@
 //!
 //! This module provides functions to parse markdown files and extract
 //! their heading structure into a hierarchical tree.
+//!
+//! All parsing is delegated to `turbovault-parser` for unified, code-block-aware
+//! OFM (Obsidian Flavored Markdown) support.
 
 pub mod builder;
 pub mod content;
@@ -15,7 +18,6 @@ pub use document::{Document, Heading, HeadingNode};
 pub use links::{Link, LinkTarget, extract_links};
 pub use output::{Block, DocumentOutput, InlineElement, Section};
 
-use pulldown_cmark::{Event, Parser, Tag, TagEnd};
 use std::path::Path;
 
 /// Parse a markdown file and extract its structure.
@@ -38,8 +40,8 @@ pub fn parse_file(path: &Path) -> std::io::Result<Document> {
 
 /// Parse markdown content and extract headings with byte offsets.
 ///
-/// Uses pulldown-cmark's `into_offset_iter()` to track exact byte positions
-/// of headings in the source document, eliminating the need for string searching.
+/// Uses turbovault-parser for unified markdown parsing with proper
+/// code-block awareness and OFM support.
 ///
 /// # Arguments
 ///
@@ -49,36 +51,14 @@ pub fn parse_file(path: &Path) -> std::io::Result<Document> {
 ///
 /// A `Document` containing the content and extracted headings with byte offsets.
 pub fn parse_markdown(content: &str) -> Document {
-    let parser = Parser::new(content).into_offset_iter();
-    let mut headings = Vec::new();
-    let mut current_heading: Option<(usize, String, usize)> = None;
-    let mut in_heading = false;
-
-    for (event, range) in parser {
-        match event {
-            Event::Start(Tag::Heading { level, .. }) => {
-                in_heading = true;
-                // Store the byte offset where this heading starts
-                current_heading = Some((level as usize, String::new(), range.start));
-            }
-            Event::End(TagEnd::Heading(_)) => {
-                if let Some((level, text, offset)) = current_heading.take() {
-                    headings.push(Heading {
-                        level,
-                        text: text.trim().to_string(),
-                        offset,
-                    });
-                }
-                in_heading = false;
-            }
-            Event::Text(text) if in_heading => {
-                if let Some((_, ref mut heading_text, _)) = current_heading {
-                    heading_text.push_str(&text);
-                }
-            }
-            _ => {}
-        }
-    }
+    let headings = turbovault_parser::parse_headings(content)
+        .into_iter()
+        .map(|h| Heading {
+            level: h.level as usize,
+            text: h.text,
+            offset: h.position.offset,
+        })
+        .collect();
 
     Document::new(content.to_string(), headings)
 }

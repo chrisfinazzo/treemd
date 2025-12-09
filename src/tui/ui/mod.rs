@@ -574,6 +574,7 @@ fn render_markdown_enhanced(
                 level,
                 content,
                 inline,
+                ..
             } => {
                 // Render sub-heading with appropriate styling
                 let mut formatted = if !inline.is_empty() {
@@ -1135,6 +1136,7 @@ fn render_block_to_lines(
             level,
             content,
             inline,
+            ..
         } => {
             // Render heading with appropriate styling
             let mut formatted = if !inline.is_empty() {
