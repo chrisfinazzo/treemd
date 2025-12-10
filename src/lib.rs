@@ -83,6 +83,12 @@ pub mod tui;
 /// ```
 pub mod query;
 
+/// Keybindings module for customizable keyboard shortcuts.
+///
+/// Provides a flexible keybinding system that allows users to customize
+/// keyboard shortcuts via configuration files.
+pub mod keybindings;
+
 // Re-export commonly used types for convenience
 pub use config::Config;
 pub use parser::{Document, Heading, HeadingNode, parse_file, parse_markdown};

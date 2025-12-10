@@ -1068,6 +1068,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "keybinds"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a039c6f55b34108f8ec8caa617cbaa17232ff08ccc9e3d656a41ec974e09d322"
+dependencies = [
+ "bitflags 2.10.0",
+ "crossterm 0.29.0",
+ "serde",
+ "smallvec",
+]
+
+[[package]]
 name = "kqueue"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1893,6 +1905,9 @@ name = "smallvec"
 version = "1.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "static_assertions"
@@ -2244,6 +2259,7 @@ dependencies = [
  "dirs",
  "indexmap",
  "indextree",
+ "keybinds",
  "libc",
  "notify",
  "nucleo-matcher",
@@ -2253,6 +2269,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
+ "strum 0.27.2",
  "supports-color",
  "syntect",
  "tempfile",
