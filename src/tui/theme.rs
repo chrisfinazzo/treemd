@@ -434,7 +434,7 @@ impl Theme {
             link_selected_bg: Color::Indexed(117),
             link_selected_fg: Color::Indexed(236),
             table_border: Color::Indexed(241),
-            search_match_bg: Color::Indexed(136),  // Dark yellow
+            search_match_bg: Color::Indexed(136), // Dark yellow
             search_match_fg: Color::White,
             search_current_bg: Color::Yellow,
             search_current_fg: Color::Black,
@@ -635,7 +635,7 @@ impl Theme {
             link_selected_fg: Color::Indexed(235),
             table_border: Color::Indexed(243),
             // Search highlighting
-            search_match_bg: Color::Indexed(136),  // Yellow-orange
+            search_match_bg: Color::Indexed(136), // Yellow-orange
             search_match_fg: Color::Indexed(235),
             search_current_bg: Color::Indexed(214), // Bright orange
             search_current_fg: Color::Indexed(235),
@@ -676,7 +676,7 @@ impl Theme {
             link_selected_fg: Color::Indexed(234),
             table_border: Color::Indexed(243),
             // Search highlighting
-            search_match_bg: Color::Indexed(136),  // Yellow
+            search_match_bg: Color::Indexed(136), // Yellow
             search_match_fg: Color::Indexed(234),
             search_current_bg: Color::Indexed(215), // Orange
             search_current_fg: Color::Indexed(234),
@@ -717,7 +717,7 @@ impl Theme {
             link_selected_fg: Color::Indexed(235),
             table_border: Color::Indexed(242),
             // Search highlighting
-            search_match_bg: Color::Indexed(136),  // Yellow
+            search_match_bg: Color::Indexed(136), // Yellow
             search_match_fg: Color::Indexed(235),
             search_current_bg: Color::Indexed(223), // Peach/Yellow
             search_current_fg: Color::Indexed(235),

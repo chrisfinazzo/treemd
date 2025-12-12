@@ -91,9 +91,15 @@ mod tests {
         assert_eq!(strip_markdown_inline("_italic_"), "italic");
         assert_eq!(strip_markdown_inline("`code`"), "code");
         assert_eq!(strip_markdown_inline("~~strikethrough~~"), "strikethrough");
-        assert_eq!(strip_markdown_inline("**bold** and *italic*"), "bold and italic");
+        assert_eq!(
+            strip_markdown_inline("**bold** and *italic*"),
+            "bold and italic"
+        );
         assert_eq!(strip_markdown_inline("**_bold italic_**"), "bold italic");
-        assert_eq!(strip_markdown_inline("*`code in italic`*"), "code in italic");
+        assert_eq!(
+            strip_markdown_inline("*`code in italic`*"),
+            "code in italic"
+        );
         assert_eq!(
             strip_markdown_inline("**turbocli-parser** (850 LOC)"),
             "turbocli-parser (850 LOC)"

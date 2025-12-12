@@ -178,10 +178,7 @@ impl Keybindings {
         if let Some(kb) = self.bindings.get(&mode) {
             for bind in kb.as_slice() {
                 let key_str = format_key_sequence(&bind.seq);
-                action_keys
-                    .entry(bind.action)
-                    .or_default()
-                    .push(key_str);
+                action_keys.entry(bind.action).or_default().push(key_str);
             }
         }
 
@@ -321,24 +318,27 @@ mod tests {
         let mut kb = Keybindings::default();
 
         // Check some basic normal mode bindings
-        assert!(kb
-            .dispatch(
+        assert!(
+            kb.dispatch(
                 KeybindingMode::Normal,
                 make_key_event(KeyCode::Char('j'), KeyModifiers::NONE)
             )
-            .is_some());
-        assert!(kb
-            .dispatch(
+            .is_some()
+        );
+        assert!(
+            kb.dispatch(
                 KeybindingMode::Normal,
                 make_key_event(KeyCode::Char('k'), KeyModifiers::NONE)
             )
-            .is_some());
-        assert!(kb
-            .dispatch(
+            .is_some()
+        );
+        assert!(
+            kb.dispatch(
                 KeybindingMode::Normal,
                 make_key_event(KeyCode::Char('q'), KeyModifiers::NONE)
             )
-            .is_some());
+            .is_some()
+        );
     }
 
     #[test]

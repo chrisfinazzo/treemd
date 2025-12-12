@@ -153,7 +153,9 @@ pub fn run(terminal: &mut DefaultTerminal, app: App) -> Result<()> {
                     // Try to get an action from the keybinding system
                     if let Some(action) = app.get_action_for_key(key.code, key.modifiers) {
                         // Special handling for CommandPalette confirm - it may return Quit
-                        if action == Action::ConfirmAction && app.mode == app::AppMode::CommandPalette {
+                        if action == Action::ConfirmAction
+                            && app.mode == app::AppMode::CommandPalette
+                        {
                             if app.execute_selected_command() {
                                 return Ok(()); // Quit command executed
                             }
@@ -167,13 +169,15 @@ pub fn run(terminal: &mut DefaultTerminal, app: App) -> Result<()> {
                                                 app.status_message =
                                                     Some(format!("✗ Failed to reload: {}", e));
                                             } else {
-                                                app.status_message =
-                                                    Some("✓ File reloaded after editing".to_string());
+                                                app.status_message = Some(
+                                                    "✓ File reloaded after editing".to_string(),
+                                                );
                                             }
                                             app.update_content_metrics();
                                         }
                                         Err(e) => {
-                                            app.status_message = Some(format!("✗ Editor failed: {}", e));
+                                            app.status_message =
+                                                Some(format!("✗ Editor failed: {}", e));
                                         }
                                     }
                                 }
@@ -189,7 +193,11 @@ pub fn run(terminal: &mut DefaultTerminal, app: App) -> Result<()> {
 
 /// Handle text input for search/edit modes
 /// Returns true if the key was handled
-fn handle_text_input(app: &mut App, code: KeyCode, modifiers: crossterm::event::KeyModifiers) -> bool {
+fn handle_text_input(
+    app: &mut App,
+    code: KeyCode,
+    modifiers: crossterm::event::KeyModifiers,
+) -> bool {
     // Text input modes: outline search, doc search, link search, command palette, cell edit
 
     // Outline search mode - only handle input when active

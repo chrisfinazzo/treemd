@@ -4,8 +4,8 @@
 //! to reload when modifications are detected.
 
 use notify::{
-    event::{AccessKind, AccessMode, ModifyKind, RenameMode},
     Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
+    event::{AccessKind, AccessMode, ModifyKind, RenameMode},
 };
 use std::path::PathBuf;
 use std::sync::mpsc::{self, Receiver, TryRecvError};
@@ -127,7 +127,12 @@ impl FileWatcher {
 
             // Strategy 3: File name match (fallback for FSEvents quirks)
             // Only match if event is in same directory
-            if let (Some(event_name), Some(watched_name), Some(event_parent), Some(watched_parent)) = (
+            if let (
+                Some(event_name),
+                Some(watched_name),
+                Some(event_parent),
+                Some(watched_parent),
+            ) = (
                 event_path.file_name(),
                 watched_path.file_name(),
                 event_path.parent(),
@@ -135,7 +140,9 @@ impl FileWatcher {
             ) {
                 if event_name == watched_name {
                     // Verify same directory (canonicalize to handle . and ..)
-                    if let (Ok(ep), Ok(wp)) = (event_parent.canonicalize(), watched_parent.canonicalize()) {
+                    if let (Ok(ep), Ok(wp)) =
+                        (event_parent.canonicalize(), watched_parent.canonicalize())
+                    {
                         return ep == wp;
                     }
                 }

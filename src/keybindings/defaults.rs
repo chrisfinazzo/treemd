@@ -73,6 +73,7 @@ fn add_normal_mode(kb: &mut Keybindings) {
     bind(kb, Normal, "Enter", ToggleExpand);
     bind(kb, Normal, "Space", ToggleExpand);
     bind(kb, Normal, "Tab", ToggleFocus);
+    bind(kb, Normal, "Shift+Tab", ToggleFocusBack);
     bind(kb, Normal, "h", Collapse);
     bind(kb, Normal, "Left", Collapse);
     bind(kb, Normal, "l", Expand);
@@ -335,12 +336,16 @@ fn add_doc_search_mode(kb: &mut Keybindings) {
     // Delete character
     bind(kb, DocSearch, "Backspace", SearchBackspace);
 
-    // Navigate matches while typing
+    // Navigate matches (while typing and after accepting)
+    bind(kb, DocSearch, "n", NextMatch);
+    bind(kb, DocSearch, "N", PrevMatch);
     bind(kb, DocSearch, "Down", NextMatch);
     bind(kb, DocSearch, "Up", PrevMatch);
+    bind(kb, DocSearch, "Tab", NextMatch);
+    bind(kb, DocSearch, "Shift+Tab", PrevMatch);
 
-    // Toggle to outline search
-    bind(kb, DocSearch, "Tab", ToggleSearchMode);
+    // Re-enter search input with /
+    bind(kb, DocSearch, "/", EnterDocSearch);
 }
 
 fn add_command_palette_mode(kb: &mut Keybindings) {

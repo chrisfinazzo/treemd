@@ -590,10 +590,7 @@ pub fn render_command_palette(frame: &mut Frame, app: &App, theme: &Theme) {
             };
 
             // Command name
-            let mut spans = vec![
-                Span::styled(prefix, style),
-                Span::styled(cmd.name, style),
-            ];
+            let mut spans = vec![Span::styled(prefix, style), Span::styled(cmd.name, style)];
 
             // Show aliases in dimmer text
             if !cmd.aliases.is_empty() {
@@ -622,7 +619,10 @@ pub fn render_command_palette(frame: &mut Frame, app: &App, theme: &Theme) {
     lines.push(Line::from(""));
     lines.push(Line::from(vec![
         Span::styled("↑↓/Tab", Style::default().fg(theme.modal_key_fg())),
-        Span::styled(" navigate  ", Style::default().fg(theme.modal_description())),
+        Span::styled(
+            " navigate  ",
+            Style::default().fg(theme.modal_description()),
+        ),
         Span::styled("Enter", Style::default().fg(theme.modal_key_fg())),
         Span::styled(" execute  ", Style::default().fg(theme.modal_description())),
         Span::styled("Esc", Style::default().fg(theme.modal_key_fg())),

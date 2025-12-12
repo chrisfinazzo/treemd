@@ -1065,7 +1065,11 @@ mod tests {
 
         // Filter by content (text filter matches the code content)
         let results = eval(md, ".code[main]");
-        assert_eq!(results.len(), 1, "Should find 1 code block containing 'main'");
+        assert_eq!(
+            results.len(),
+            1,
+            "Should find 1 code block containing 'main'"
+        );
 
         if let Value::Code(c) = &results[0] {
             assert!(c.content.contains("fn main"));

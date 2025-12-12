@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2025-12-12
+
+### Fixed
+
+- **Search navigation after locking in results** - Fixed `n`/`N` and `Tab`/`Shift+Tab` not cycling through matches after pressing Enter to accept search
+  - Added missing keybindings in DocSearch mode for match navigation
+  - Both outline search (`s`) and content search (`/`) now properly support cycling
+
+- **Escape clears search instead of quitting** - When search is locked in (after pressing Enter), Escape now clears the search and returns to normal mode instead of exiting the application
+
+- **Re-enter search input with `/`** - After locking in a search, pressing `/` re-enters input mode to edit the query (keeps existing query)
+
+### Added
+
+- `Shift+Tab` keybinding in Normal mode for `ToggleFocusBack` action
+
 ## [0.5.0] - 2025-12-11
 
 ### Added

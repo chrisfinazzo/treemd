@@ -9,10 +9,7 @@ use serde::{Deserialize, Serialize};
 // Re-export content block types from turbovault-parser
 // These provide code-block-aware parsing and OFM support
 pub use turbovault_parser::{
-    ContentBlock as Block,
-    InlineElement,
-    ListItem,
-    TableAlignment as Alignment,
+    ContentBlock as Block, InlineElement, ListItem, TableAlignment as Alignment,
 };
 
 /// Root document structure with metadata and nested sections

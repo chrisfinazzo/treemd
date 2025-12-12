@@ -1,4 +1,4 @@
-use crate::keybindings::{KeybindingsConfig, Keybindings};
+use crate::keybindings::{Keybindings, KeybindingsConfig};
 use crate::tui::theme::ThemeName;
 use ratatui::style::Color;
 use serde::{Deserialize, Serialize};

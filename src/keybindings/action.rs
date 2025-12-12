@@ -37,6 +37,8 @@ pub enum Action {
     ToggleExpand,
     /// Toggle focus between outline and content
     ToggleFocus,
+    /// Toggle focus backwards (Shift+Tab)
+    ToggleFocusBack,
     /// Toggle outline visibility
     ToggleOutline,
     /// Increase outline width
@@ -203,6 +205,7 @@ impl Action {
             Action::Collapse => "Collapse heading",
             Action::ToggleExpand => "Toggle expand/collapse",
             Action::ToggleFocus => "Switch focus (outline/content)",
+            Action::ToggleFocusBack => "Switch focus backwards",
             Action::ToggleOutline => "Toggle outline visibility",
             Action::OutlineWidthIncrease => "Increase outline width",
             Action::OutlineWidthDecrease => "Decrease outline width",
@@ -320,6 +323,7 @@ impl Action {
             | Action::Collapse
             | Action::ToggleExpand
             | Action::ToggleFocus
+            | Action::ToggleFocusBack
             | Action::ToggleOutline
             | Action::OutlineWidthIncrease
             | Action::OutlineWidthDecrease => "Outline",
@@ -334,10 +338,9 @@ impl Action {
             | Action::ToggleSearchMode
             | Action::ExitMode => "Modes",
 
-            Action::NextLink
-            | Action::PreviousLink
-            | Action::FollowLink
-            | Action::LinkSearch => "Links",
+            Action::NextLink | Action::PreviousLink | Action::FollowLink | Action::LinkSearch => {
+                "Links"
+            }
 
             Action::InteractiveNext
             | Action::InteractivePrevious

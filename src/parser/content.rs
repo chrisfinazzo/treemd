@@ -162,7 +162,10 @@ Also [[Another Valid]]
         }
 
         // Should only find the 2 valid links, NOT the one inside the code block
-        assert_eq!(wikilink_count, 2, "Should find exactly 2 wikilinks (not the one in code block)");
+        assert_eq!(
+            wikilink_count, 2,
+            "Should find exactly 2 wikilinks (not the one in code block)"
+        );
     }
 
     #[test]

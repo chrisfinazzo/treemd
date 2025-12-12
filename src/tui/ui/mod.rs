@@ -8,8 +8,8 @@ use layout::{DynamicLayout, Section};
 use crate::tui::app::{App, AppMode, Focus};
 use crate::tui::theme::Theme;
 use popups::{
-    render_cell_edit_overlay, render_command_palette, render_file_create_confirm, render_help_popup,
-    render_link_picker, render_save_width_confirm, render_theme_picker,
+    render_cell_edit_overlay, render_command_palette, render_file_create_confirm,
+    render_help_popup, render_link_picker, render_save_width_confirm, render_theme_picker,
 };
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -150,9 +150,17 @@ fn render_search_bar(frame: &mut Frame, app: &App, area: Rect) {
 
     // Styling based on search type
     let (label, title, accent_color) = if is_doc_search {
-        ("Find", " Content Search (Tab: switch to Outline) ", Color::Cyan)
+        (
+            "Find",
+            " Content Search (Tab: switch to Outline) ",
+            Color::Cyan,
+        )
     } else {
-        ("Filter", " Outline Search (Tab: switch to Content) ", Color::Yellow)
+        (
+            "Filter",
+            " Outline Search (Tab: switch to Content) ",
+            Color::Yellow,
+        )
     };
 
     // Build search bar with query
@@ -166,7 +174,9 @@ fn render_search_bar(frame: &mut Frame, app: &App, area: Rect) {
         Span::raw(format!("{}: ", label)),
         Span::styled(
             query_display,
-            Style::default().fg(accent_color).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(accent_color)
+                .add_modifier(Modifier::BOLD),
         ),
         Span::raw(match_info),
     ];
@@ -235,7 +245,10 @@ fn render_outline(frame: &mut Frame, app: &mut App, area: Rect) {
                 format!("{}{}{}📄 ", indent, expand_indicator, bookmark_indicator)
             } else {
                 let hashes = "#".repeat(item.level);
-                format!("{}{}{}{} ", indent, expand_indicator, bookmark_indicator, hashes)
+                format!(
+                    "{}{}{}{} ",
+                    indent, expand_indicator, bookmark_indicator, hashes
+                )
             };
 
             // Build line with search highlighting using shared utility
@@ -533,8 +546,7 @@ fn render_raw_markdown(content: &str, theme: &Theme) -> Text<'static> {
             // Replace tabs with spaces to avoid terminal rendering artifacts
             let line_content = line.replace('\t', "    ");
             // Raw content with plain text styling
-            let content_span =
-                Span::styled(line_content, Style::default().fg(theme.foreground));
+            let content_span = Span::styled(line_content, Style::default().fg(theme.foreground));
             Line::from(vec![line_num, content_span])
         })
         .collect();
@@ -814,7 +826,8 @@ fn render_markdown_enhanced(
                                 }
                                 if let Some(sub) = id.sub_idx {
                                     // Decode the sub_idx to check if it matches this nested block
-                                    let base = idx * ITEM_MULTIPLIER + nested_idx * NESTED_MULTIPLIER;
+                                    let base =
+                                        idx * ITEM_MULTIPLIER + nested_idx * NESTED_MULTIPLIER;
                                     sub == base + CODE_BLOCK_OFFSET
                                         || sub == base + TABLE_OFFSET
                                         || sub == base + IMAGE_OFFSET
@@ -1102,9 +1115,12 @@ fn apply_search_highlighting(
 
                     // Add text before the match (with original style)
                     if current_pos < rel_match_start {
-                        if let Some(before_text) = safe_slice(span_text, current_pos, rel_match_start) {
+                        if let Some(before_text) =
+                            safe_slice(span_text, current_pos, rel_match_start)
+                        {
                             if !before_text.is_empty() {
-                                new_spans.push(Span::styled(before_text.to_string(), original_style));
+                                new_spans
+                                    .push(Span::styled(before_text.to_string(), original_style));
                             }
                         }
                     }

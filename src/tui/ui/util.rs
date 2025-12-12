@@ -152,11 +152,17 @@ pub fn highlight_search_matches(
 
         // Add text before match
         if match_start > last_end {
-            spans.push(Span::styled(text[last_end..match_start].to_string(), base_style));
+            spans.push(Span::styled(
+                text[last_end..match_start].to_string(),
+                base_style,
+            ));
         }
 
         // Add highlighted match
-        spans.push(Span::styled(text[match_start..match_end].to_string(), highlight_style));
+        spans.push(Span::styled(
+            text[match_start..match_end].to_string(),
+            highlight_style,
+        ));
 
         last_end = match_end;
         search_start = match_end;
@@ -199,7 +205,12 @@ pub fn build_highlighted_line(
     let mut spans = prefix;
 
     if let Some(q) = query {
-        spans.extend(highlight_search_matches(text, q, base_style, highlight_style));
+        spans.extend(highlight_search_matches(
+            text,
+            q,
+            base_style,
+            highlight_style,
+        ));
     } else {
         spans.push(Span::styled(text.to_string(), base_style));
     }

@@ -228,7 +228,7 @@ pub struct App {
     pub search_query: String,
     pub highlighter: SyntaxHighlighter,
     pub show_outline: bool,
-    pub outline_width: u16,                // Percentage: 20, 30, or 40
+    pub outline_width: u16, // Percentage: 20, 30, or 40
     /// Whether the config file had a custom (non-standard) outline width at startup.
     /// Used to protect power users' custom config values from being overwritten.
     /// Standard values are 20, 30, 40; anything else is considered custom.
@@ -240,14 +240,14 @@ pub struct App {
     pub show_theme_picker: bool,
     pub theme_picker_selected: usize,
     pub theme_picker_original: Option<ThemeName>, // Original theme before picker opened (for cancel)
-    previous_selection: Option<String>, // Track previous selection to detect changes
+    previous_selection: Option<String>,           // Track previous selection to detect changes
 
     // Link following state
     pub mode: AppMode,
-    pub current_file_path: PathBuf,  // Path to current file for resolving relative links
-    pub file_path_changed: bool,     // Flag to signal file watcher needs update
-    pub suppress_file_watch: bool,   // Skip next file watch check (after internal save)
-    pub links_in_view: Vec<Link>,    // Links in currently displayed content
+    pub current_file_path: PathBuf, // Path to current file for resolving relative links
+    pub file_path_changed: bool,    // Flag to signal file watcher needs update
+    pub suppress_file_watch: bool,  // Skip next file watch check (after internal save)
+    pub links_in_view: Vec<Link>,   // Links in currently displayed content
     pub filtered_link_indices: Vec<usize>, // Indices into links_in_view after filtering
     pub selected_link_idx: Option<usize>, // Currently selected index in filtered list
     pub link_search_query: String,  // Search query for filtering links
@@ -287,7 +287,7 @@ pub struct App {
     pub doc_search_query: String,
     pub doc_search_matches: Vec<SearchMatch>,
     pub doc_search_current_idx: Option<usize>,
-    pub doc_search_active: bool,        // Whether search input is active
+    pub doc_search_active: bool, // Whether search input is active
     pub doc_search_from_interactive: bool, // Whether search was started from interactive mode
     pub doc_search_selected_link_idx: Option<usize>, // Index into links_in_view if match is in a link
 
@@ -471,12 +471,13 @@ impl App {
         match self.mode {
             AppMode::Normal => {
                 if self.show_search && self.outline_search_active {
-                    // Active input mode
+                    // Active input mode for typing search query
                     KeybindingMode::Search
-                } else if self.show_search {
-                    // Accepted search - show highlights but use DocSearch bindings for n/N/Tab
-                    KeybindingMode::DocSearch
                 } else {
+                    // Normal mode (including accepted outline search state)
+                    // When show_search=true but outline_search_active=false, we're in
+                    // "accepted search" state - user can navigate filtered results with
+                    // normal keybindings (j/k, n/N for cycling, s to start new search)
                     KeybindingMode::Normal
                 }
             }
@@ -530,7 +531,17 @@ impl App {
 
         match action {
             // === Application ===
-            Quit => return ActionResult::Quit,
+            Quit => {
+                // If in accepted outline search state, clear search instead of quitting
+                if self.show_search {
+                    self.search_query.clear();
+                    self.filter_outline();
+                    self.show_search = false;
+                    self.outline_search_active = false;
+                } else {
+                    return ActionResult::Quit;
+                }
+            }
 
             // === Navigation ===
             Next => self.next(),
@@ -558,6 +569,7 @@ impl App {
             Collapse => self.collapse(),
             ToggleExpand => self.toggle_expand(),
             ToggleFocus => self.toggle_focus(),
+            ToggleFocusBack => self.toggle_focus_back(),
             ToggleOutline => self.toggle_outline(),
             OutlineWidthIncrease => self.cycle_outline_width(true),
             OutlineWidthDecrease => self.cycle_outline_width(false),
@@ -741,10 +753,29 @@ impl App {
 
     /// Handle confirm action based on current mode
     fn handle_confirm_action(&mut self) {
-        // Handle outline search - accept but keep highlights visible
+        // Handle outline search - accept and keep filtered results visible
         if self.show_search && self.outline_search_active {
-            self.outline_search_active = false;
-            // Keep show_search = true so highlights remain visible
+            // Check if there are any matches (filtered items with matching text)
+            let has_matches = if self.search_query.is_empty() {
+                true // Empty query matches everything
+            } else {
+                // Check if any outline items match the query
+                !self.outline_items.is_empty()
+            };
+
+            if has_matches {
+                // Accept search - deactivate input but keep filter visible
+                self.outline_search_active = false;
+                // show_search stays true to keep highlights visible
+                // User can now navigate with j/k, n/N, or press 's' to start new search
+            } else {
+                // No matches - show status message and clear search
+                self.status_message = Some(format!("Pattern not found: {}", self.search_query));
+                self.show_search = false;
+                self.outline_search_active = false;
+                self.search_query.clear();
+                self.filter_outline(); // Restore full outline
+            }
             return;
         }
 
@@ -1128,14 +1159,19 @@ impl App {
     }
 
     pub fn toggle_search(&mut self) {
-        if self.show_search {
-            // If already showing, clear and hide
+        if self.show_search && self.outline_search_active {
+            // If actively typing in search, toggle it off (clear and hide)
             self.show_search = false;
             self.outline_search_active = false;
             self.search_query.clear();
             self.filter_outline();
+        } else if self.show_search {
+            // In accepted search state (showing filtered results) - start fresh search
+            self.search_query.clear();
+            self.filter_outline(); // Restore full outline for new search
+            self.outline_search_active = true; // Re-enter input mode
         } else {
-            // Enter search mode
+            // Enter search mode from normal state
             self.show_search = true;
             self.outline_search_active = true;
             self.search_query.clear();
@@ -1253,7 +1289,22 @@ impl App {
     // ========== Document Search Methods ==========
 
     /// Enter document search mode (activated by / when content is focused or in interactive mode)
+    /// If in accepted outline search state, re-enter outline search input instead
+    /// If already in accepted doc search state, re-enter doc search input
     pub fn enter_doc_search(&mut self) {
+        // If in accepted outline search state (locked-in filter), re-enter outline search input
+        if self.show_search && !self.outline_search_active {
+            // Re-activate outline search input (keep existing query for editing)
+            self.outline_search_active = true;
+            return;
+        }
+
+        // If already in accepted doc search state, re-enter input mode (keep existing query)
+        if self.mode == AppMode::DocSearch && !self.doc_search_active {
+            self.doc_search_active = true;
+            return;
+        }
+
         // Remember if we came from interactive mode to restore it later
         self.doc_search_from_interactive = self.mode == AppMode::Interactive;
         self.mode = AppMode::DocSearch;
@@ -1342,7 +1393,9 @@ impl App {
                 // Scroll to bring match line into view (center it if possible)
                 let half_viewport = 10u16; // Approximate half viewport
                 self.content_scroll = match_line.saturating_sub(half_viewport);
-                self.content_scroll = self.content_scroll.min(self.content_height.saturating_sub(1));
+                self.content_scroll = self
+                    .content_scroll
+                    .min(self.content_height.saturating_sub(1));
                 self.content_scroll_state = self
                     .content_scroll_state
                     .position(self.content_scroll as usize);
@@ -1354,7 +1407,12 @@ impl App {
     }
 
     /// Detect if a search match position overlaps with a link and select it
-    fn detect_link_at_search_match(&mut self, match_line: usize, match_col: usize, match_len: usize) {
+    fn detect_link_at_search_match(
+        &mut self,
+        match_line: usize,
+        match_col: usize,
+        match_len: usize,
+    ) {
         use crate::parser::links::extract_links;
 
         // Get current section content
@@ -1445,7 +1503,17 @@ impl App {
     }
 
     /// Navigate to next search match
+    /// Handles both doc search matches and accepted outline search navigation
     pub fn next_doc_match(&mut self) {
+        // Check if in accepted outline search state (filtered outline visible)
+        if self.show_search && !self.outline_search_active && !self.outline_items.is_empty() {
+            // Cycle through filtered outline items
+            let current = self.outline_state.selected().unwrap_or(0);
+            let next = (current + 1) % self.outline_items.len();
+            self.select_outline_index(next);
+            return;
+        }
+
         if self.doc_search_matches.is_empty() {
             return;
         }
@@ -1459,7 +1527,18 @@ impl App {
     }
 
     /// Navigate to previous search match
+    /// Handles both doc search matches and accepted outline search navigation
     pub fn prev_doc_match(&mut self) {
+        // Check if in accepted outline search state (filtered outline visible)
+        if self.show_search && !self.outline_search_active && !self.outline_items.is_empty() {
+            // Cycle through filtered outline items
+            let current = self.outline_state.selected().unwrap_or(0);
+            let len = self.outline_items.len();
+            let prev = (current + len - 1) % len;
+            self.select_outline_index(prev);
+            return;
+        }
+
         if self.doc_search_matches.is_empty() {
             return;
         }
@@ -1678,6 +1757,34 @@ impl App {
     }
 
     pub fn toggle_focus(&mut self) {
+        // If in locked-in outline search state, Tab cycles to next filtered item
+        if self.show_search && !self.outline_search_active && !self.outline_items.is_empty() {
+            let current = self.outline_state.selected().unwrap_or(0);
+            let next = (current + 1) % self.outline_items.len();
+            self.select_outline_index(next);
+            return;
+        }
+
+        if self.show_outline {
+            self.focus = match self.focus {
+                Focus::Outline => Focus::Content,
+                Focus::Content => Focus::Outline,
+            };
+        }
+    }
+
+    /// Toggle focus backwards (Shift+Tab) - cycles to previous item when search is locked in
+    pub fn toggle_focus_back(&mut self) {
+        // If in locked-in outline search state, Shift+Tab cycles to previous filtered item
+        if self.show_search && !self.outline_search_active && !self.outline_items.is_empty() {
+            let current = self.outline_state.selected().unwrap_or(0);
+            let len = self.outline_items.len();
+            let prev = (current + len - 1) % len;
+            self.select_outline_index(prev);
+            return;
+        }
+
+        // Same as toggle_focus when not in locked search state
         if self.show_outline {
             self.focus = match self.focus {
                 Focus::Outline => Focus::Content,
@@ -1733,10 +1840,7 @@ impl App {
         // Decide whether to persist based on user's config type
         if self.config_has_custom_outline_width {
             // Power user: protect their custom config value, offer explicit save
-            self.set_status_message(&format!(
-                "Width: {}% | S or :w to save",
-                self.outline_width
-            ));
+            self.set_status_message(&format!("Width: {}% | S or :w to save", self.outline_width));
         } else {
             // New user or standard config: safe to persist for better UX
             let _ = self.config.set_outline_width(self.outline_width);
@@ -1755,8 +1859,9 @@ impl App {
         match self.config.set_outline_width(self.outline_width) {
             Ok(_) => {
                 // Update the flag since user explicitly chose to save
-                self.config_has_custom_outline_width =
-                    self.outline_width != 20 && self.outline_width != 30 && self.outline_width != 40;
+                self.config_has_custom_outline_width = self.outline_width != 20
+                    && self.outline_width != 30
+                    && self.outline_width != 40;
                 self.set_status_message(&format!(
                     "✓ Width {}% saved to config",
                     self.outline_width
@@ -1946,7 +2051,11 @@ impl App {
         }
 
         // Find the heading in the document by text
-        let heading = self.document.headings.iter().find(|h| h.text == selected_text)?;
+        let heading = self
+            .document
+            .headings
+            .iter()
+            .find(|h| h.text == selected_text)?;
 
         // Convert byte offset to line number (1-indexed)
         let offset = heading.offset.min(self.document.content.len());
