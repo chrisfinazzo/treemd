@@ -672,16 +672,19 @@ fn render_markdown_enhanced(
                         .unwrap_or(false);
 
                     // Check if a link within this list item is selected
-                    // Link sub_idx format: item_idx * 1000 + inline_idx + 100
+                    use crate::tui::interactive::{LINK_ITEM_MULTIPLIER, LINK_OFFSET};
                     let selected_link_inline_idx = selected_element_id.and_then(|id| {
                         if id.block_idx == block_idx {
                             id.sub_idx.and_then(|sub| {
                                 // Decode: check if this is a link sub_idx for this item
-                                if sub >= 100
-                                    && sub >= idx * 1000 + 100
-                                    && sub < (idx + 1) * 1000 + 100
+                                let item_link_base = idx * LINK_ITEM_MULTIPLIER + LINK_OFFSET;
+                                let next_item_link_base =
+                                    (idx + 1) * LINK_ITEM_MULTIPLIER + LINK_OFFSET;
+                                if sub >= LINK_OFFSET
+                                    && sub >= item_link_base
+                                    && sub < next_item_link_base
                                 {
-                                    Some(sub - idx * 1000 - 100)
+                                    Some(sub - item_link_base)
                                 } else {
                                     None
                                 }
@@ -802,11 +805,47 @@ fn render_markdown_enhanced(
                     }
 
                     // Render nested blocks within this list item (e.g., code blocks)
-                    for nested_block in &item.blocks {
+                    use crate::tui::interactive::{
+                        CODE_BLOCK_OFFSET, IMAGE_OFFSET, ITEM_MULTIPLIER, NESTED_MULTIPLIER,
+                        TABLE_OFFSET,
+                    };
+                    for (nested_idx, nested_block) in item.blocks.iter().enumerate() {
+                        // Check if this nested block is selected
+                        let is_nested_selected = selected_element_id
+                            .map(|id| {
+                                if id.block_idx != block_idx {
+                                    return false;
+                                }
+                                if let Some(sub) = id.sub_idx {
+                                    // Decode the sub_idx to check if it matches this nested block
+                                    let base = idx * ITEM_MULTIPLIER + nested_idx * NESTED_MULTIPLIER;
+                                    sub == base + CODE_BLOCK_OFFSET
+                                        || sub == base + TABLE_OFFSET
+                                        || sub == base + IMAGE_OFFSET
+                                } else {
+                                    false
+                                }
+                            })
+                            .unwrap_or(false);
+
                         let nested_lines = render_block_to_lines(nested_block, highlighter, theme);
-                        for nested_line in nested_lines {
-                            // Add indentation for nested content (align with list item text)
-                            let mut indented_spans = vec![Span::raw("     ")]; // 5 spaces indent
+                        for (line_idx, nested_line) in nested_lines.into_iter().enumerate() {
+                            let mut indented_spans = vec![];
+
+                            // Add selection indicator on first line of nested block
+                            if is_nested_selected && line_idx == 0 {
+                                indented_spans.push(Span::styled(
+                                    "→ ",
+                                    Style::default()
+                                        .fg(theme.selection_indicator_fg)
+                                        .bg(theme.selection_indicator_bg)
+                                        .add_modifier(Modifier::BOLD),
+                                ));
+                                indented_spans.push(Span::raw("   ")); // 3 spaces (5 - 2 for arrow)
+                            } else {
+                                indented_spans.push(Span::raw("     ")); // 5 spaces indent
+                            }
+
                             indented_spans.extend(nested_line.spans);
                             lines.push(Line::from(indented_spans));
                         }

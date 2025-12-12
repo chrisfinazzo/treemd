@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-12-11
+
+### Fixed
+
+- **Query engine missing code blocks in list items** - Code blocks nested inside numbered/bulleted list items are now correctly extracted for queries
+  - Queries like `.code` and `.code[pattern]` now find code blocks inside list items
+  - Also extracts images and tables nested within list items
+  - Recursively extracts from blockquotes and details blocks as well
+  - Example: Installation instructions with indented code blocks are now queryable
+
+### Technical
+
+- **Recursive block extraction** (`src/query/eval.rs`)
+  - Added `extract_nested_blocks()` helper function for recursive extraction
+  - `extract_blocks()` now descends into `Block::List`, `Block::Blockquote`, and `Block::Details`
+  - Maintains flat index of code blocks, images, and tables for efficient querying
+
 ## [0.4.8] - 2025-12-07
 
 ### Added

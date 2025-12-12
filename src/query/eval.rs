@@ -666,6 +666,62 @@ fn extract_blocks(
     let mut tables = Vec::new();
     let mut lists = Vec::new();
 
+    // Recursively extract blocks from nested structures (e.g., list items)
+    fn extract_nested_blocks(
+        blocks: &[Block],
+        code_blocks: &mut Vec<CodeValue>,
+        images: &mut Vec<ImageValue>,
+        tables: &mut Vec<TableValue>,
+    ) {
+        for block in blocks {
+            match block {
+                Block::Code {
+                    language,
+                    content,
+                    start_line,
+                    end_line,
+                } => {
+                    code_blocks.push(CodeValue {
+                        language: language.clone(),
+                        content: content.clone(),
+                        start_line: *start_line,
+                        end_line: *end_line,
+                    });
+                }
+                Block::Image { alt, src, title } => {
+                    images.push(ImageValue {
+                        alt: alt.clone(),
+                        src: src.clone(),
+                        title: title.clone(),
+                    });
+                }
+                Block::Table {
+                    headers,
+                    rows,
+                    alignments,
+                } => {
+                    tables.push(TableValue {
+                        headers: headers.clone(),
+                        rows: rows.clone(),
+                        alignments: alignments
+                            .iter()
+                            .map(|a| format!("{:?}", a).to_lowercase())
+                            .collect(),
+                    });
+                }
+                Block::Blockquote { blocks, .. } => {
+                    // Recursively extract from blockquote content
+                    extract_nested_blocks(blocks, code_blocks, images, tables);
+                }
+                Block::Details { blocks, .. } => {
+                    // Recursively extract from details content
+                    extract_nested_blocks(blocks, code_blocks, images, tables);
+                }
+                _ => {}
+            }
+        }
+    }
+
     for block in blocks {
         match block {
             Block::Code {
@@ -699,6 +755,11 @@ fn extract_blocks(
                 });
             }
             Block::List { ordered, items } => {
+                // Extract code blocks and other elements from list item nested blocks
+                for item in &items {
+                    extract_nested_blocks(&item.blocks, &mut code_blocks, &mut images, &mut tables);
+                }
+
                 lists.push(ListValue {
                     ordered,
                     items: items
@@ -709,6 +770,14 @@ fn extract_blocks(
                         })
                         .collect(),
                 });
+            }
+            Block::Blockquote { blocks, .. } => {
+                // Recursively extract from blockquote content
+                extract_nested_blocks(&blocks, &mut code_blocks, &mut images, &mut tables);
+            }
+            Block::Details { blocks, .. } => {
+                // Recursively extract from details content
+                extract_nested_blocks(&blocks, &mut code_blocks, &mut images, &mut tables);
             }
             _ => {}
         }
@@ -933,6 +1002,73 @@ mod tests {
         assert_eq!(results.len(), 1);
         if let Value::Heading(h) = &results[0] {
             assert_eq!(h.text, "World");
+        }
+    }
+
+    #[test]
+    fn test_code_blocks_in_list_items() {
+        // Regression test: code blocks nested inside list items should be extracted
+        // See bug report: indented fenced code blocks not parsed
+        let md = r#"## Installation
+
+1. Install from crates.io:
+   ```bash
+   cargo install treemd
+   ```
+
+2. Or build from source:
+   ```bash
+   git clone https://github.com/example/repo
+   cd repo
+   cargo install --path .
+   ```"#;
+
+        let results = eval(md, ".code");
+        assert_eq!(
+            results.len(),
+            2,
+            "Should find 2 code blocks nested in list items"
+        );
+
+        // Verify first code block
+        if let Value::Code(c) = &results[0] {
+            assert_eq!(c.language.as_deref(), Some("bash"));
+            assert!(c.content.contains("cargo install treemd"));
+        } else {
+            panic!("Expected Code value");
+        }
+
+        // Verify second code block
+        if let Value::Code(c) = &results[1] {
+            assert_eq!(c.language.as_deref(), Some("bash"));
+            assert!(c.content.contains("git clone"));
+        } else {
+            panic!("Expected Code value");
+        }
+    }
+
+    #[test]
+    fn test_code_blocks_with_content_filter_in_list() {
+        // Note: Language filtering via .code[rust] currently uses text filter (matches content)
+        // For content-based filtering, we can test with content patterns
+        let md = r#"## Examples
+
+1. Python example:
+   ```python
+   print("hello")
+   ```
+
+2. Rust example:
+   ```rust
+   fn main() {}
+   ```"#;
+
+        // Filter by content (text filter matches the code content)
+        let results = eval(md, ".code[main]");
+        assert_eq!(results.len(), 1, "Should find 1 code block containing 'main'");
+
+        if let Value::Code(c) = &results[0] {
+            assert!(c.content.contains("fn main"));
         }
     }
 }

@@ -12,6 +12,23 @@ use crate::parser::output::{Block, InlineElement};
 use crate::parser::{Link, LinkTarget};
 use std::collections::HashMap;
 
+// Sub-index encoding constants for nested elements within list items
+// Format: item_idx * ITEM_MULTIPLIER + nested_idx * NESTED_MULTIPLIER + TYPE_OFFSET
+/// Multiplier for list item index in sub_idx encoding
+pub const ITEM_MULTIPLIER: usize = 10000;
+/// Multiplier for nested block index within a list item
+pub const NESTED_MULTIPLIER: usize = 10;
+/// Offset for inline links within list items (item_idx * 1000 + inline_idx + LINK_OFFSET)
+pub const LINK_OFFSET: usize = 100;
+/// Multiplier for link encoding (different from nested blocks)
+pub const LINK_ITEM_MULTIPLIER: usize = 1000;
+/// Offset for code blocks nested in list items
+pub const CODE_BLOCK_OFFSET: usize = 5000;
+/// Offset for tables nested in list items
+pub const TABLE_OFFSET: usize = 6000;
+/// Offset for images nested in list items
+pub const IMAGE_OFFSET: usize = 7000;
+
 /// Interactive navigation state
 #[derive(Debug, Clone)]
 pub struct InteractiveState {
@@ -240,10 +257,11 @@ impl InteractiveState {
                         for (inline_idx, inline_elem) in item.inline.iter().enumerate() {
                             if let InlineElement::Link { text, url, .. } = inline_elem {
                                 // Use a composite sub_idx to differentiate from checkboxes
-                                // Format: item_idx * 1000 + inline_idx + 100 (to avoid collision with checkbox indices)
                                 let id = ElementId {
                                     block_idx,
-                                    sub_idx: Some(item_idx * 1000 + inline_idx + 100),
+                                    sub_idx: Some(
+                                        item_idx * LINK_ITEM_MULTIPLIER + inline_idx + LINK_OFFSET,
+                                    ),
                                 };
 
                                 // Parse link target
@@ -293,14 +311,15 @@ impl InteractiveState {
                         // Process nested blocks within list items (code blocks, tables, etc.)
                         for (nested_idx, nested_block) in item.blocks.iter().enumerate() {
                             let nested_start_line = current_line;
+                            let nested_base =
+                                item_idx * ITEM_MULTIPLIER + nested_idx * NESTED_MULTIPLIER;
                             match nested_block {
                                 Block::Code {
                                     language, content, ..
                                 } => {
-                                    // Use composite sub_idx: item_idx * 10000 + nested_idx * 10 + offset
                                     let id = ElementId {
                                         block_idx,
-                                        sub_idx: Some(item_idx * 10000 + nested_idx * 10 + 5000),
+                                        sub_idx: Some(nested_base + CODE_BLOCK_OFFSET),
                                     };
 
                                     let lines = 2 + content.lines().count();
@@ -320,7 +339,7 @@ impl InteractiveState {
                                 Block::Table { headers, rows, .. } => {
                                     let id = ElementId {
                                         block_idx,
-                                        sub_idx: Some(item_idx * 10000 + nested_idx * 10 + 6000),
+                                        sub_idx: Some(nested_base + TABLE_OFFSET),
                                     };
 
                                     let lines = 3 + rows.len();
@@ -347,7 +366,7 @@ impl InteractiveState {
                                 Block::Image { alt, src, .. } => {
                                     let id = ElementId {
                                         block_idx,
-                                        sub_idx: Some(item_idx * 10000 + nested_idx * 10 + 7000),
+                                        sub_idx: Some(nested_base + IMAGE_OFFSET),
                                     };
 
                                     self.elements.push(InteractiveElement {
