@@ -13,6 +13,7 @@ pub enum Section {
     Search,
     Content,
     Status,
+    Footer,
 }
 
 /// A dynamic layout that maps section IDs to their rendered areas

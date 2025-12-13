@@ -108,6 +108,15 @@ pub struct CustomThemeConfig {
     pub search_current_bg: Option<ColorValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub search_current_fg: Option<ColorValue>,
+    // Footer keybinding hints
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub help_key_bg: Option<ColorValue>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub help_key_fg: Option<ColorValue>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub help_desc_fg: Option<ColorValue>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer_bg: Option<ColorValue>,
 }
 
 /// Color value that can be specified in multiple formats

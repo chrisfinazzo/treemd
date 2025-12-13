@@ -38,6 +38,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
         .section_if(show_search_bar, Section::Search, Constraint::Length(3))
         .section(Section::Content, Constraint::Min(0))
         .section(Section::Status, Constraint::Length(1))
+        .section(Section::Footer, Constraint::Length(1))
         .build();
 
     // Render title bar
@@ -74,6 +75,9 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 
     // Render status bar at bottom
     render_status_bar(frame, app, main_layout.require(Section::Status));
+
+    // Render keybinding hints footer
+    render_footer(frame, app, main_layout.require(Section::Footer));
 
     // Render help popup if shown
     if app.show_help {
@@ -425,11 +429,11 @@ fn render_status_bar(frame: &mut Frame, app: &App, area: Rect) {
             0
         };
 
-        // Get element-specific hint
+        // Get element-specific hint (shows current element info)
         let element_hint = app.interactive_state.get_status_hint();
 
         format!(
-            " [INTERACTIVE] {}/{} ({}%) • {} • j/k:Navigate • Enter/Space:Action • Esc:Exit ",
+            " [INTERACTIVE] {}/{} ({}%) • {}",
             current, total, percentage, element_hint
         )
     } else if app.mode == AppMode::LinkFollow {
@@ -466,33 +470,41 @@ fn render_status_bar(frame: &mut Frame, app: &App, area: Rect) {
                 };
 
                 format!(
-                    "Link {}/{}: \"{}\" → {} • Tab:Next • Enter:Follow • Esc:Exit",
+                    "Link {}/{}: \"{}\" → {}",
                     selected, link_count, link.text, target_str
                 )
             } else {
-                format!(
-                    "Link {}/{} • Tab:Next • 1-9:Jump • Enter:Follow • Esc:Exit",
-                    selected, link_count
-                )
+                format!("Link {}/{}", selected, link_count)
             }
         } else {
-            "No links in current section • Press Esc to exit".to_string()
+            "No links in current section".to_string()
         };
 
-        format!(" [LINK FOLLOW MODE] {} ", link_info)
+        format!(" [LINKS] {} ", link_info)
     } else {
-        // Normal mode status
-        let focus_indicator = match app.focus {
-            Focus::Outline => "Outline",
-            Focus::Content => "Content",
-        };
-
-        let selected_idx = app.outline_state.selected().unwrap_or(0);
-        let total = app.outline_items.len();
-        let percentage = if total > 0 {
-            (selected_idx + 1) * 100 / total
-        } else {
-            0
+        // Normal mode status - show position based on focus
+        let (focus_indicator, position_info) = match app.focus {
+            Focus::Outline => {
+                let selected_idx = app.outline_state.selected().unwrap_or(0);
+                let total = app.outline_items.len();
+                let percentage = if total > 0 {
+                    (selected_idx + 1) * 100 / total
+                } else {
+                    0
+                };
+                ("Outline", format!("{}/{} ({}%)", selected_idx + 1, total, percentage))
+            }
+            Focus::Content => {
+                // Show content scroll position
+                let scroll_pos = app.content_scroll as usize;
+                let content_height = app.content_height as usize;
+                let percentage = if content_height > 0 {
+                    ((scroll_pos + 1) * 100 / content_height).min(100)
+                } else {
+                    0
+                };
+                ("Content", format!("Line {} ({}%)", scroll_pos + 1, percentage))
+            }
         };
 
         let outline_status = if app.show_outline {
@@ -514,18 +526,16 @@ fn render_status_bar(frame: &mut Frame, app: &App, area: Rect) {
         };
 
         format!(
-            " [{}] {}/{} ({}%){}{} • {} • i:Interactive • f:Links • b:Back • w:View • []:Size • m:Mark • y/Y:Copy • t:Theme • ?:Help ",
+            " [{}] {}{}{} • {}",
             focus_indicator,
-            selected_idx + 1,
-            total,
-            percentage,
+            position_info,
             bookmark_indicator,
             history_indicator,
             outline_status
         )
     };
 
-    let theme_name = format!(" Theme:{} ", app.theme.name);
+    let theme_name = format!(" • Theme:{}", app.theme.name);
     let raw_indicator = if app.show_raw_source { " [RAW]" } else { "" };
     let status_text = format!("{}{}{}", status_text, theme_name, raw_indicator);
 
@@ -546,6 +556,157 @@ fn render_status_bar(frame: &mut Frame, app: &App, area: Rect) {
     let status = Paragraph::new(status_text).style(status_style);
 
     frame.render_widget(status, area);
+}
+
+/// Render the footer with context-aware keybinding hints
+fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
+    use crate::tui::app::AppMode;
+
+    let theme = &app.theme;
+
+    // Define keybindings based on current mode
+    let keys: Vec<(&str, &str)> = match app.mode {
+        AppMode::Interactive => {
+            // Check if we're in table mode
+            if app.interactive_state.is_in_table_mode() {
+                vec![
+                    ("j/k", "Row"),
+                    ("h/l", "Col"),
+                    ("e", "Edit"),
+                    ("y", "Copy"),
+                    ("Esc", "Exit Table"),
+                ]
+            } else {
+                // Get current element type for context-specific hints
+                use crate::tui::interactive::ElementType;
+                let element_hint = match app.interactive_state.current_element() {
+                    Some(elem) => match &elem.element_type {
+                        ElementType::Checkbox { .. } => {
+                            vec![
+                                ("j/k", "Navigate"),
+                                ("Space", "Toggle"),
+                                ("Esc", "Exit"),
+                            ]
+                        }
+                        ElementType::Table { .. } => {
+                            vec![
+                                ("j/k", "Navigate"),
+                                ("Enter", "Enter Table"),
+                                ("y", "Copy"),
+                                ("Esc", "Exit"),
+                            ]
+                        }
+                        ElementType::Link { .. } => {
+                            vec![
+                                ("j/k", "Navigate"),
+                                ("Enter", "Follow"),
+                                ("y", "Copy URL"),
+                                ("Esc", "Exit"),
+                            ]
+                        }
+                        ElementType::Details { .. } => {
+                            vec![
+                                ("j/k", "Navigate"),
+                                ("Enter", "Expand"),
+                                ("Esc", "Exit"),
+                            ]
+                        }
+                        ElementType::CodeBlock { .. } => {
+                            vec![
+                                ("j/k", "Navigate"),
+                                ("y", "Copy"),
+                                ("Esc", "Exit"),
+                            ]
+                        }
+                        ElementType::Image { .. } => {
+                            vec![
+                                ("j/k", "Navigate"),
+                                ("Enter", "Open"),
+                                ("Esc", "Exit"),
+                            ]
+                        }
+                    },
+                    None => vec![
+                        ("j/k", "Navigate"),
+                        ("Enter", "Action"),
+                        ("Esc", "Exit"),
+                    ],
+                };
+                element_hint
+            }
+        }
+        AppMode::LinkFollow => {
+            vec![
+                ("Tab", "Next Link"),
+                ("1-9", "Jump"),
+                ("Enter", "Follow"),
+                ("y", "Copy URL"),
+                ("Esc", "Exit"),
+            ]
+        }
+        AppMode::DocSearch => {
+            vec![
+                ("n/N", "Next/Prev"),
+                ("Tab", "Outline Search"),
+                ("Enter", "Accept"),
+                ("Esc", "Cancel"),
+            ]
+        }
+        AppMode::CellEdit => {
+            vec![
+                ("Enter", "Save"),
+                ("Esc", "Cancel"),
+            ]
+        }
+        AppMode::CommandPalette => {
+            vec![
+                ("j/k", "Navigate"),
+                ("Enter", "Select"),
+                ("Esc", "Cancel"),
+            ]
+        }
+        _ => {
+            // Normal mode - show based on focus
+            match app.focus {
+                Focus::Outline => {
+                    vec![
+                        ("j/k", "Navigate"),
+                        ("Enter", "Select"),
+                        ("/", "Search"),
+                        ("i", "Interactive"),
+                        ("f", "Links"),
+                        ("?", "Help"),
+                    ]
+                }
+                Focus::Content => {
+                    vec![
+                        ("j/k", "Scroll"),
+                        ("/", "Search"),
+                        ("i", "Interactive"),
+                        ("f", "Links"),
+                        ("y", "Copy"),
+                        ("?", "Help"),
+                    ]
+                }
+            }
+        }
+    };
+
+    // Build styled spans using flat_map pattern
+    let spans: Vec<Span> = keys
+        .iter()
+        .flat_map(|(key, desc)| {
+            vec![
+                Span::styled(format!(" {} ", key), theme.help_key_style()),
+                Span::styled(format!("{} ", desc), theme.help_desc_style()),
+            ]
+        })
+        .collect();
+
+    let line = Line::from(spans);
+    let footer = Paragraph::new(line).style(theme.footer_style());
+
+    frame.render_widget(footer, area);
 }
 
 use crate::parser::content::parse_content;
