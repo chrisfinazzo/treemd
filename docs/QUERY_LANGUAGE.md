@@ -1,6 +1,6 @@
 # treemd Query Language (tql)
 
-> **Status**: Design specification — describes the intended language, not only what ships today
+> **Status**: Design specification. Describes the intended language, not only what ships today
 > **Verified against**: treemd 0.7.0
 > **Goal**: jq-like querying for Markdown - maximum DX and utility
 
@@ -52,7 +52,7 @@ treemd -q '.h1[Installation] | content' doc.md  # Section content
 | `.h1` - `.h6` | Headings at specific level | `.h2` |
 | `.h[text]` | Heading matching text (fuzzy) | `.h[Install]` |
 | `.h["text"]` | Heading matching text (exact) | `.h["Getting Started"]` |
-| `.h[/regex/]` | **Not implemented** — use `.h \| select(matches("Chapter [0-9]+"))` | `.h[/Chapter \d+/]` |
+| `.h[/regex/]` | **Not implemented**. Use `.h \| select(matches("Chapter [0-9]+"))` | `.h[/Chapter \d+/]` |
 | `.h1[text]` | Level + text filter combined | `.h1[Features]` |
 
 ### Code Blocks
@@ -62,7 +62,7 @@ treemd -q '.h1[Installation] | content' doc.md  # Section content
 | `.code` | All code blocks | `.code` |
 | `.code[lang]` | Code blocks with language (whole-string, case-insensitive) | `.code[rust]` |
 | `.code["lang"]` | Same, explicit string | `.code["python"]` |
-| `.code[/regex/]` | **Not implemented** — use `.code \| select(.lang == "js" or .lang == "ts")` | `.code[/^(js\|ts)$/]` |
+| `.code[/regex/]` | **Not implemented**. Use `.code \| select(.lang == "js" or .lang == "ts")` | `.code[/^(js\|ts)$/]` |
 
 A bracket filter on `.code` matches the **language**, never the block body.
 To search bodies, use `.code | select(contains("TODO"))`.
@@ -92,11 +92,11 @@ To search bodies, use `.code | select(contains("TODO"))`.
 a blockquote, and in a tight list item. Three cases are still missed because of
 how the underlying parser reports them:
 
-- **Images wrapped in a link** — `[![badge](b.png)](https://ci.example)` is not
+- **Images wrapped in a link**: `[![badge](b.png)](https://ci.example)` is not
   reported, so README badge rows come back empty and `stats` undercounts.
 - **Loose list items** (items separated by blank lines) do not expose their
   content as blocks, so images inside them are missed.
-- **Image titles** — `![a](x.png "Title")` puts `x.png "Title"` in `.src` and
+- **Image titles**: `![a](x.png "Title")` puts `x.png "Title"` in `.src` and
   leaves `.title` empty, rather than splitting the two.
 
 ### Document
@@ -199,7 +199,7 @@ Comma generates multiple outputs:
 .code[rust], .code[python]   # Rust and Python code
 ```
 
-A comma **inside parentheses** is not implemented — `(.h1, .h2) | text`
+A comma **inside parentheses** is not implemented. `(.h1, .h2) | text`
 fails with `Expected ')', found ','`. Pipe each branch separately instead:
 `.h1 | text, .h2 | text`.
 
@@ -255,7 +255,7 @@ fails with `Expected ')', found ','`. Pipe each branch separately instead:
 |----------|------|-------------|
 | `.src` | string | Image source URL (includes the title when one is present) |
 | `.alt` | string | Alt text |
-| `.title` | string? | Title attribute — currently always empty |
+| `.title` | string? | Title attribute, currently always empty |
 
 Access these as properties (`.img[0].alt`). Only `src`/`url`/`href` exist as
 pipe functions; `.img | alt` reports `Unknown function`.
@@ -578,7 +578,7 @@ $ treemd -q '.h1 | nonexistent' doc.md
 error: Unknown function 'nonexistent'
 ```
 
-A filter that matches nothing is **not** an error — it prints nothing and
+A filter that matches nothing is **not** an error: it prints nothing and
 exits `0`, so scripts should test for empty output rather than exit status:
 
 ```
