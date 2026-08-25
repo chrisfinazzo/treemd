@@ -7,25 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-08-25
+
 ### Added
 
-- **`-n` / `--line-numbers`** - `--list` and `--tree` can now append each heading's `[start-end]` line range in plain output, so a section can be fetched by line range instead of loaded in full — useful for keeping LLM context small
+- **`-n` / `--line-numbers`** - `--list` and `--tree` can now append each heading's `[start-end]` line range in plain output, so a section can be fetched by line range instead of loaded in full, which keeps LLM context small
 - **Code block fence and background options** - `[content] code_fences` takes `full` (unchanged), `label` (a dim language name above the block, no closing row), or `none`. Fence rows are dropped rather than hidden, so they cost no vertical space. `[theme] code_block_bg` overrides the block background, or `"none"` disables it
-
-### Changed
-
-- **Code blocks are painted with the code theme's background** - Only syntect token foregrounds were used before, so a code theme's background was discarded and blocks had no way to stand out from surrounding prose. The background now covers the full block width, padding included, and can be overridden or turned off with `[theme] code_block_bg`
-
-## [0.7.0] - 2026-07-30
-
-### Added
-
 - **Terminal-native GIF playback** - Kitty and iTerm2 now animate GIFs themselves. iTerm2 receives the original file over a chunked multipart OSC transfer, so playback stays smooth and the TUI cursor is left undisturbed
 - **Bracketed paste** - Pasted text arrives as a single event and is sanitized before reaching an input field, so escape sequences in a paste can never trigger keybindings
 - **Agent skill definition** - `skills/treemd/` documents the CLI and tql for coding agents, so they can survey and extract from large markdown files without loading them whole
 
 ### Changed
 
+- **Code blocks are painted with the code theme's background** - Only syntect token foregrounds were used before, so a code theme's background was discarded and blocks had no way to stand out from surrounding prose. The background now covers the full block width, padding included, and can be overridden or turned off with `[theme] code_block_bg`
 - **Image encoding moved off the render path** - A single shared background worker prepares resize/encode work while rendering continues with the last completed frame; a generation counter discards results that a newer image or terminal size has superseded
 - **Inline GIFs stream instead of buffering every frame** - Inline playback retains one compositing canvas and decoder rather than expanding long recordings into hundreds of full-size RGBA frames, and the decoded-protocol cache is now a bounded LRU
 - **Release builds unwind on panic** - The release profile no longer aborts, so panic isolation around third-party image and render work can report an error instead of terminating the TUI
