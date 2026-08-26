@@ -24,6 +24,66 @@ pub struct TableRenderContext<'a> {
 /// Minimum column width (including padding) to maintain readability
 const MIN_COL_WIDTH: usize = 3;
 
+/// One space either side of a cell's text. Included in every column width, and
+/// reserved again by `render_table_row` when it wraps, so the two must agree.
+const CELL_PADDING: usize = 2;
+
+/// Fit columns into `budget` by capping the widest ones, not by scaling all.
+///
+/// Scaling every column by the same ratio takes the same *fraction* from each,
+/// which in cell terms means a 4-wide column loses almost nothing in absolute
+/// space while being crushed past readability, and a 75-wide column keeps most
+/// of its surplus. A two-character `ID` header ends up stacked vertically next
+/// to a `Description` column that is still 64 cells wide.
+///
+/// Instead, find the largest cap where trimming every column to it fits, which
+/// takes space only from columns above the cap. Narrow columns are untouched
+/// until every wider one has come down to their size.
+fn fit_columns_to_budget(col_widths: &mut [usize], budget: usize) {
+    if col_widths.is_empty() || col_widths.iter().sum::<usize>() <= budget {
+        return;
+    }
+
+    let capped_total = |cap: usize, w: &[usize]| -> usize {
+        w.iter().map(|x| (*x).min(cap).max(MIN_COL_WIDTH)).sum()
+    };
+
+    // Largest cap that fits. If even an all-minimum table is too wide there is
+    // nothing to find, and every column lands on the floor below.
+    let mut lo = MIN_COL_WIDTH;
+    let mut hi = col_widths.iter().copied().max().unwrap_or(MIN_COL_WIDTH);
+    while lo < hi {
+        let mid = lo + (hi - lo).div_ceil(2);
+        if capped_total(mid, col_widths) <= budget {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+
+    for width in col_widths.iter_mut() {
+        *width = (*width).min(lo).max(MIN_COL_WIDTH);
+    }
+
+    // An integral cap usually leaves a few cells over. Hand them back one each
+    // to the columns that were actually clipped, so the space goes where
+    // content was lost rather than padding a column that already fits.
+    let mut slack = budget.saturating_sub(col_widths.iter().sum::<usize>());
+    let clipped: Vec<usize> = col_widths
+        .iter()
+        .enumerate()
+        .filter(|(_, w)| **w == lo)
+        .map(|(i, _)| i)
+        .collect();
+    for idx in clipped {
+        if slack == 0 {
+            break;
+        }
+        col_widths[idx] += 1;
+        slack -= 1;
+    }
+}
+
 /// Calculate column widths using content-weighted area approach
 ///
 /// Instead of using max cell width, use average cell width weighted by content.
@@ -100,84 +160,20 @@ pub fn render_table(
     // Calculate column widths using content-weighted approach
     let mut col_widths = calculate_column_widths(headers, rows);
 
-    // Start with normal padding (1 space each side = 2 total)
-    let mut padding = 2usize;
-
-    // Add initial padding
+    // One space each side. `render_table_row` always reserves this much when it
+    // wraps cell text, so it has to stay inside the width for the whole of the
+    // fitting below. Shaving it off here would not reclaim decoration, it would
+    // just take two cells away from the content.
     for width in &mut col_widths {
-        *width += padding;
+        *width += CELL_PADDING;
     }
 
-    // Smart table collapsing: shrink columns proportionally if table is too wide
+    // Shrink to fit if the table is wider than the space it has.
     if let Some(max_width) = available_width {
-        let max_width = max_width as usize;
         let prefix_width = if in_table_mode || is_selected { 2 } else { 0 };
         let border_width = col_count + 1; // │ between and around columns
-
-        // Try shrinking with progressively less padding
-        loop {
-            let total_width: usize = col_widths.iter().sum::<usize>() + border_width + prefix_width;
-
-            if total_width <= max_width || max_width <= border_width + prefix_width {
-                break;
-            }
-
-            // Available space for column content
-            let available_for_cols = max_width.saturating_sub(border_width + prefix_width);
-            let current_col_total: usize = col_widths.iter().sum();
-
-            if current_col_total == 0 {
-                break;
-            }
-
-            // Check if we can fit by reducing padding first (before shrinking content)
-            if padding > 0 {
-                let potential_savings = col_count * padding;
-                if total_width - potential_savings <= max_width {
-                    // Reducing padding is enough - recalculate with less padding
-                    let needed_reduction = total_width - max_width;
-                    // Ensure at least 1 reduction per iteration to avoid infinite loop
-                    let padding_reduction = (needed_reduction / col_count).max(1).min(padding);
-                    for width in &mut col_widths {
-                        *width = width.saturating_sub(padding_reduction);
-                    }
-                    padding = padding.saturating_sub(padding_reduction);
-                    continue;
-                }
-                // Remove all padding and try again
-                for width in &mut col_widths {
-                    *width = width.saturating_sub(padding);
-                }
-                padding = 0;
-                continue;
-            }
-
-            // Padding exhausted, now shrink columns proportionally
-            let shrink_ratio = available_for_cols as f64 / current_col_total as f64;
-            for width in &mut col_widths {
-                let new_width = ((*width as f64) * shrink_ratio) as usize;
-                *width = new_width.max(MIN_COL_WIDTH);
-            }
-
-            // Iterative trim: MIN_COL_WIDTH clamping can push total back over budget.
-            // Repeatedly reduce the widest column by 1 until we fit.
-            let mut total_after: usize = col_widths.iter().sum();
-            while total_after > available_for_cols {
-                if let Some(max_idx) = col_widths
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, w)| **w > MIN_COL_WIDTH)
-                    .max_by_key(|(_, w)| **w)
-                    .map(|(i, _)| i)
-                {
-                    col_widths[max_idx] -= 1;
-                    total_after -= 1;
-                } else {
-                    break; // All columns at minimum, can't shrink further
-                }
-            }
-            break;
-        }
+        let budget = usize::from(max_width).saturating_sub(border_width + prefix_width);
+        fit_columns_to_budget(&mut col_widths, budget);
     }
 
     // Top border (add selection indicator or spacing)
@@ -307,8 +303,8 @@ pub fn render_table_row(
 
     for (i, cell) in cells.iter().enumerate() {
         let width = col_widths.get(i).copied().unwrap_or(10);
-        // Available width for content is width - 2 (for padding)
-        let content_width = width.saturating_sub(2);
+        // Column widths carry `CELL_PADDING`, so the text gets what is left.
+        let content_width = width.saturating_sub(CELL_PADDING);
         let wrapped = if content_width > 0 {
             wrap_text(cell, content_width)
         } else {
@@ -605,6 +601,107 @@ mod tests {
 
             // Constrained version should have MORE lines due to wrapping
             assert!(lines_constrained.len() >= lines_unconstrained.len());
+        }
+
+        /// Widths of each column, read back off the rendered top border.
+        fn rendered_col_widths(lines: &[Line<'static>]) -> Vec<usize> {
+            let border: String = lines[0]
+                .spans
+                .iter()
+                .map(|s| s.content.as_ref())
+                .collect::<String>();
+            border
+                .trim_start_matches(|c| c != '┌')
+                .trim_matches(['┌', '┐'])
+                .split('┬')
+                .map(|seg| seg.chars().count())
+                .collect()
+        }
+
+        fn unequal_table() -> (Vec<String>, Vec<Alignment>, Vec<Vec<String>>) {
+            let headers = ["ID", "OK", "Name", "Description"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect();
+            let rows = (0..3)
+                .map(|r| {
+                    vec![
+                        format!("{r}"),
+                        "yes".to_string(),
+                        format!("item-{r}"),
+                        "a considerably longer description column that dominates the width"
+                            .to_string(),
+                    ]
+                })
+                .collect();
+            (headers, vec![Alignment::Left; 4], rows)
+        }
+
+        #[test]
+        fn narrow_columns_are_not_crushed_to_fit_a_dominant_one() {
+            // Scaling every column by the same ratio drove `ID` and `OK` to the
+            // floor, stacking two-letter headers vertically, while the
+            // description column kept the bulk of its surplus.
+            let theme = test_theme();
+            let (headers, aligns, rows) = unequal_table();
+
+            for width in [60u16, 80, 100] {
+                let lines = render_table(
+                    &headers,
+                    &aligns,
+                    &rows,
+                    &theme,
+                    false,
+                    false,
+                    None,
+                    Some(width),
+                );
+                let widths = rendered_col_widths(&lines);
+                assert_eq!(widths.len(), 4, "at {width}: {widths:?}");
+
+                // "ID" and "OK" are 2 cells of content. They should never be
+                // clipped while a wider column still has surplus to give.
+                let description = widths[3];
+                for (i, header) in ["ID", "OK"].iter().enumerate() {
+                    assert!(
+                        widths[i] >= header.len() || widths[i] >= description,
+                        "at {width}: {header} got {} cells while description kept {description}: {widths:?}",
+                        widths[i]
+                    );
+                }
+            }
+        }
+
+        #[test]
+        fn shrinking_never_exceeds_the_available_width() {
+            let theme = test_theme();
+            let (headers, aligns, rows) = unequal_table();
+
+            // Below `col_count * MIN_COL_WIDTH` plus one border per edge there
+            // is no layout that fits, so the floor is where the guarantee
+            // starts: 4 columns at 3 cells plus 5 borders.
+            let floor = (4 * MIN_COL_WIDTH + 5) as u16;
+
+            for width in floor..=120 {
+                let lines = render_table(
+                    &headers,
+                    &aligns,
+                    &rows,
+                    &theme,
+                    false,
+                    false,
+                    None,
+                    Some(width),
+                );
+                for line in &lines {
+                    let rendered: usize =
+                        line.spans.iter().map(|s| terminal_width(&s.content)).sum();
+                    assert!(
+                        rendered <= usize::from(width),
+                        "at {width} a line rendered {rendered} cells wide"
+                    );
+                }
+            }
         }
 
         #[test]

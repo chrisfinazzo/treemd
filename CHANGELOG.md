@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Wide tables crushed every column instead of the ones with surplus** - Columns were scaled by a shared ratio, which takes the same fraction from each and so drove narrow columns to the floor while a dominant column kept most of its width. A two-character `ID` header ended up stacked vertically beside a description column still 64 cells wide. Space is now taken from the widest columns first, so narrow ones are untouched until every wider column has come down to their size ([#78](https://github.com/Epistates/treemd/issues/78))
+- **Stripping table padding took space from cell text rather than from decoration** - `render_table_row` always reserves one space either side when wrapping, so removing padding from the column width silently cost two cells of content per column. Padding now stays inside the width throughout fitting
 - **Code was the only part of the UI still emitting truecolor on 256-color terminals** - Syntect themes are always 24-bit, and neither the token foregrounds nor the code block background went through `rgb_to_256`, so `color_mode = "256"` quantized everything except code. Both are now quantized in one place in the highlighter, rather than the config-supplied background being converted separately in `App::new`
 
 ## [0.7.0] - 2026-08-25
