@@ -10,6 +10,9 @@ use syntect::highlighting::{Theme, ThemeSet};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
+use crate::tui::terminal_compat::ColorMode;
+use crate::tui::theme::rgb_to_256;
+
 const DEFAULT_CODE_THEME: &str = "base16-ocean.dark";
 
 /// What to paint behind a code block.
@@ -36,13 +39,33 @@ pub struct SyntaxHighlighter {
     /// Config override if one was given, otherwise the code theme's own
     /// background so it agrees with the token colors.
     code_block_bg: Option<Color>,
+    /// What the terminal can display. Syntect always reports 24-bit color, so
+    /// every color leaving this type is mapped through it.
+    color_mode: ColorMode,
     /// Cached highlight results keyed by `hash((content, language))`.
     /// `RefCell` because highlight_code takes `&self` and is called from render.
     cache: RefCell<HashMap<u64, Vec<Line<'static>>>>,
 }
 
+/// Map a syntect color to something the terminal can actually show.
+///
+/// Syntect themes are always 24-bit, so on a 256-color terminal every token
+/// color and the block background have to be quantized the same way
+/// `Theme::with_color_mode_custom` quantizes the rest of the UI.
+fn adapt(color: Color, mode: ColorMode) -> Color {
+    match mode {
+        ColorMode::Rgb => color,
+        ColorMode::Indexed256 => rgb_to_256(color),
+    }
+}
+
 impl SyntaxHighlighter {
-    pub fn new(theme: &str, theme_dir: Option<PathBuf>, background: CodeBlockBackground) -> Self {
+    pub fn new(
+        theme: &str,
+        theme_dir: Option<PathBuf>,
+        background: CodeBlockBackground,
+        color_mode: ColorMode,
+    ) -> Self {
         let syntax_set = SyntaxSet::load_defaults_newlines();
         let mut theme_set = ThemeSet::load_defaults();
         if let Some(dir) = theme_dir
@@ -83,12 +106,14 @@ impl SyntaxHighlighter {
             CodeBlockBackground::FromTheme => {
                 theme.settings.background.map(|c| Color::Rgb(c.r, c.g, c.b))
             }
-        };
+        }
+        .map(|c| adapt(c, color_mode));
 
         Self {
             syntax_set,
             theme,
             code_block_bg,
+            color_mode,
             cache: RefCell::new(HashMap::new()),
         }
     }
@@ -128,7 +153,7 @@ impl SyntaxHighlighter {
                 .into_iter()
                 .map(|(style, text)| {
                     let fg = style.foreground;
-                    let color = Color::Rgb(fg.r, fg.g, fg.b);
+                    let color = adapt(Color::Rgb(fg.r, fg.g, fg.b), self.color_mode);
                     let mut ratatui_style = Style::default().fg(color);
 
                     if style

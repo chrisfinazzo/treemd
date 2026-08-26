@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Code was the only part of the UI still emitting truecolor on 256-color terminals** - Syntect themes are always 24-bit, and neither the token foregrounds nor the code block background went through `rgb_to_256`, so `color_mode = "256"` quantized everything except code. Both are now quantized in one place in the highlighter, rather than the config-supplied background being converted separately in `App::new`
+
 ## [0.7.0] - 2026-08-25
 
 ### Added

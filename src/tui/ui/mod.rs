@@ -2818,9 +2818,10 @@ mod tests {
     // ---------- code block fences and background ----------
 
     use crate::tui::syntax::CodeBlockBackground;
+    use crate::tui::terminal_compat::ColorMode;
 
     fn code_lines(fences: CodeFences, bg: CodeBlockBackground, lang: Option<&str>) -> Vec<String> {
-        let hl = SyntaxHighlighter::new("base16-ocean.dark", None, bg);
+        let hl = SyntaxHighlighter::new("base16-ocean.dark", None, bg, ColorMode::Rgb);
         let theme = Theme::ocean_dark();
         render_code_block(lang, "let x = 1;\n", &hl, &theme, false, fences, Some(30))
             .iter()
@@ -2864,7 +2865,12 @@ mod tests {
 
     #[test]
     fn code_block_background_pads_every_row_to_a_rectangle() {
-        let hl = SyntaxHighlighter::new("base16-ocean.dark", None, CodeBlockBackground::FromTheme);
+        let hl = SyntaxHighlighter::new(
+            "base16-ocean.dark",
+            None,
+            CodeBlockBackground::FromTheme,
+            ColorMode::Rgb,
+        );
         let theme = Theme::ocean_dark();
         let lines = render_code_block(
             Some("rust"),
@@ -2892,7 +2898,12 @@ mod tests {
     #[test]
     fn code_block_background_off_leaves_rows_unpainted_and_unpadded() {
         let lines = {
-            let hl = SyntaxHighlighter::new("base16-ocean.dark", None, CodeBlockBackground::Off);
+            let hl = SyntaxHighlighter::new(
+                "base16-ocean.dark",
+                None,
+                CodeBlockBackground::Off,
+                ColorMode::Rgb,
+            );
             let theme = Theme::ocean_dark();
             render_code_block(
                 Some("rust"),
@@ -2914,8 +2925,12 @@ mod tests {
     #[test]
     fn code_block_background_explicit_color_overrides_the_theme() {
         let want = Color::Rgb(40, 40, 50);
-        let hl =
-            SyntaxHighlighter::new("base16-ocean.dark", None, CodeBlockBackground::Color(want));
+        let hl = SyntaxHighlighter::new(
+            "base16-ocean.dark",
+            None,
+            CodeBlockBackground::Color(want),
+            ColorMode::Rgb,
+        );
         assert_eq!(hl.code_block_bg(), Some(want));
     }
 
@@ -2923,13 +2938,23 @@ mod tests {
     fn code_block_background_defaults_to_the_code_theme() {
         // base16-ocean.dark defines a background; it should be used rather than
         // left unpainted.
-        let hl = SyntaxHighlighter::new("base16-ocean.dark", None, CodeBlockBackground::FromTheme);
+        let hl = SyntaxHighlighter::new(
+            "base16-ocean.dark",
+            None,
+            CodeBlockBackground::FromTheme,
+            ColorMode::Rgb,
+        );
         assert!(hl.code_block_bg().is_some());
     }
 
     #[test]
     fn selection_indicator_keeps_its_own_colors_over_the_block_background() {
-        let hl = SyntaxHighlighter::new("base16-ocean.dark", None, CodeBlockBackground::FromTheme);
+        let hl = SyntaxHighlighter::new(
+            "base16-ocean.dark",
+            None,
+            CodeBlockBackground::FromTheme,
+            ColorMode::Rgb,
+        );
         let theme = Theme::ocean_dark();
         let lines = render_code_block(
             Some("rust"),
@@ -2950,7 +2975,12 @@ mod tests {
         // The indicator has to fit inside the block width, not extend past it.
         // With wrapping on, a row 2 cells too wide sheds its trailing padding
         // onto a stray sliver row underneath.
-        let hl = SyntaxHighlighter::new("base16-ocean.dark", None, CodeBlockBackground::FromTheme);
+        let hl = SyntaxHighlighter::new(
+            "base16-ocean.dark",
+            None,
+            CodeBlockBackground::FromTheme,
+            ColorMode::Rgb,
+        );
         let theme = Theme::ocean_dark();
         let width: u16 = 30;
 
@@ -2977,6 +3007,53 @@ mod tests {
                 .wrap(Wrap { trim: false })
                 .line_count(width);
             assert_eq!(rendered, logical, "selected={selected}: block wrapped");
+        }
+    }
+
+    #[test]
+    fn indexed256_quantizes_the_background_and_every_token_color() {
+        // Syntect themes are always 24-bit. On a 256-color terminal both the
+        // block background and the token foregrounds have to be quantized, or
+        // code is the only part of the UI still emitting truecolor.
+        let theme = Theme::ocean_dark();
+
+        let rgb = SyntaxHighlighter::new(
+            "base16-ocean.dark",
+            None,
+            CodeBlockBackground::FromTheme,
+            ColorMode::Rgb,
+        );
+        assert!(matches!(rgb.code_block_bg(), Some(Color::Rgb(..))));
+
+        let indexed = SyntaxHighlighter::new(
+            "base16-ocean.dark",
+            None,
+            CodeBlockBackground::FromTheme,
+            ColorMode::Indexed256,
+        );
+        assert!(
+            matches!(indexed.code_block_bg(), Some(Color::Indexed(_))),
+            "background not quantized: {:?}",
+            indexed.code_block_bg()
+        );
+
+        for line in render_code_block(
+            Some("rust"),
+            "let x = 1;\n",
+            &indexed,
+            &theme,
+            false,
+            CodeFences::None,
+            Some(30),
+        ) {
+            for span in &line.spans {
+                for color in [span.style.fg, span.style.bg].into_iter().flatten() {
+                    assert!(
+                        !matches!(color, Color::Rgb(..)),
+                        "truecolor leaked in Indexed256: {color:?}"
+                    );
+                }
+            }
         }
     }
 

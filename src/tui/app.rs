@@ -743,16 +743,14 @@ impl App {
         let code_theme = config.ui.code_theme.as_str();
         // Code block background: unset falls back to the code theme's own, and
         // the literal "none" turns it off for anyone who prefers code to sit on
-        // the terminal background.
+        // the terminal background. Quantizing for 256-color terminals is left
+        // to the highlighter, which does the same for every token color.
         let code_block_bg = match config.theme.code_block_bg.as_ref() {
             None => CodeBlockBackground::FromTheme,
             Some(crate::config::ColorValue::Named(name)) if name.eq_ignore_ascii_case("none") => {
                 CodeBlockBackground::Off
             }
             Some(value) => match value.to_color() {
-                Some(c) if matches!(color_mode, ColorMode::Indexed256) => {
-                    CodeBlockBackground::Color(crate::tui::theme::rgb_to_256(c))
-                }
                 Some(c) => CodeBlockBackground::Color(c),
                 None => CodeBlockBackground::FromTheme,
             },
@@ -791,7 +789,12 @@ impl App {
             show_search: false,
             outline_search_active: false,
             search_query: String::new(),
-            highlighter: SyntaxHighlighter::new(code_theme, code_theme_dir, code_block_bg),
+            highlighter: SyntaxHighlighter::new(
+                code_theme,
+                code_theme_dir,
+                code_block_bg,
+                color_mode,
+            ),
             show_outline: true,
             show_heading_markers: config.ui.outline_heading_markers,
             code_fences: config.content.code_fences,
