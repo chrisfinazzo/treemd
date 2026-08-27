@@ -175,7 +175,14 @@ impl SyntaxHighlighter {
                         ratatui_style = ratatui_style.add_modifier(Modifier::UNDERLINED);
                     }
 
-                    Span::styled(text.to_string(), ratatui_style)
+                    // Syntect needs the line ending to parse correctly, but a
+                    // Span is one row and must not carry it: unicode-width
+                    // counts '\n' as a cell, so a trailing newline makes every
+                    // code line measure one wider than it draws.
+                    Span::styled(
+                        text.trim_end_matches(['\n', '\r']).to_string(),
+                        ratatui_style,
+                    )
                 })
                 .collect();
 

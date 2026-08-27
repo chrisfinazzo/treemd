@@ -3058,6 +3058,47 @@ mod tests {
     }
 
     #[test]
+    fn highlighted_lines_carry_no_line_endings() {
+        // unicode-width counts '\n' as one cell, so a newline left inside a
+        // span makes a code row measure one wider than it draws. The padding
+        // that squares the background off is then one short, and every code
+        // row renders a cell narrower than the fence rows around it.
+        use unicode_width::UnicodeWidthStr;
+
+        let hl = SyntaxHighlighter::new(
+            "base16-ocean.dark",
+            None,
+            CodeBlockBackground::Color(Color::Rgb(40, 40, 50)),
+            ColorMode::Rgb,
+        );
+        let theme = Theme::ocean_dark();
+        let width: u16 = 30;
+
+        for line in render_code_block(
+            Some("rust"),
+            "let x = 1;\nlet yy = 22;\n",
+            &hl,
+            &theme,
+            false,
+            CodeFences::Full,
+            Some(width),
+        ) {
+            for span in &line.spans {
+                assert!(
+                    !span.content.contains(['\n', '\r']),
+                    "line ending inside a span: {span:?}"
+                );
+            }
+            let drawn: usize = line
+                .spans
+                .iter()
+                .map(|s| UnicodeWidthStr::width(s.content.as_ref()))
+                .sum();
+            assert_eq!(drawn, usize::from(width), "ragged row: {line:?}");
+        }
+    }
+
+    #[test]
     fn callout_marker_basic_kinds() {
         let m = parse_callout_marker("[!NOTE]").unwrap();
         assert_eq!(m.kind, "NOTE");
